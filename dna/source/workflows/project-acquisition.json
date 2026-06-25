@@ -1,0 +1,12 @@
+{
+  "type": "workflow",
+  "id": "project-acquisition",
+  "name": "Project Acquisition Workflow",
+  "steps": [
+    {"id": "discover", "type": "project_discovery"},
+    {"id": "analyze", "type": "project_analysis"},
+    {"id": "proposal", "type": "proposal_generation"},
+    {"id": "approval", "type": "approval_wait"},
+    {"id": "memory", "type": "remember"}
+  ]
+}
