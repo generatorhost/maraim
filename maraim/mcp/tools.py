@@ -1,17 +1,25 @@
 import json
 from pathlib import Path
 from maraim.dna.compiler import compile_dna
-from maraim.scraping.engine import run_source
+from maraim.scraping.engine import run_source, enqueue_source, run_queue_once, run_due_scheduler
 from maraim.runtime.freelance import analyze_project, generate_proposal
+from maraim.scraping.sprint2b_runtime import ensure_sprint2b
 
 SAFE_ROOT = Path.cwd().resolve()
 
 def run_tool(db, key, params):
+    ensure_sprint2b(db)
     try:
         if key == "compile_dna":
             result = compile_dna(db, Path("dna/source"))
         elif key == "run_source":
             result = run_source(db, int(params.get("source_id", 1)))
+        elif key == "enqueue_source":
+            result = enqueue_source(db, int(params.get("source_id", 1)), params.get("reason", "mcp"))
+        elif key == "run_queue":
+            result = run_queue_once(db, int(params.get("limit", 10)))
+        elif key == "run_scheduler":
+            result = run_due_scheduler(db)
         elif key == "analyze_project":
             result = analyze_project(db, int(params["project_id"]))
         elif key == "generate_proposal":
