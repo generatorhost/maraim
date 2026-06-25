@@ -1,0 +1,6 @@
+{
+  "type": "chief",
+  "key": "chief_freelance",
+  "title": "Chief Freelance Runtime",
+  "purpose": "Coordinates scraping, project scoring, proposal generation, approvals, and follow-up."
+}
