@@ -1,0 +1,5 @@
+[
+  {"type":"team","id":"scouting","name":"Project Scouting Team","agents":["scraper"]},
+  {"type":"team","id":"analysis","name":"Project Analysis Team","agents":["analyzer"]},
+  {"type":"team","id":"proposal","name":"Proposal Team","agents":["proposal_writer"]}
+]

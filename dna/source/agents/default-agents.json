@@ -1,0 +1,5 @@
+[
+  {"type":"agent","id":"scraper","name":"Scraper Agent","skills":["project_discovery","scraping"],"capabilities":["source_scan","dedup"]},
+  {"type":"agent","id":"analyzer","name":"Project Analyzer Agent","skills":["requirements_analysis","risk_scoring"],"capabilities":["local_reasoning"]},
+  {"type":"agent","id":"proposal_writer","name":"Proposal Writer Agent","skills":["proposal_generation","client_matching"],"capabilities":["local_generation"]}
+]
