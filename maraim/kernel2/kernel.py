@@ -91,8 +91,9 @@ class MaraimKernel:
             return {"ok": False, "error": "queue_empty"}
         task = item["task"]
         executed = self.task_executor_runtime.execute(task)
+        workflow_update = self.workflow_runtime.mark_task_completed(task, executed)
         self.scheduler_runtime.complete(item["id"], executed)
-        return {"ok": True, "task_id": item["id"], "task": task, "executed": executed}
+        return {"ok": True, "task_id": item["id"], "task": task, "executed": executed, "workflow_update": workflow_update}
 
     def status(self):
         return {
