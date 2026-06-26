@@ -3,6 +3,10 @@ from .runtime_graph import RuntimeGraph
 from .dna_manager import DNAManager
 from .event_bus import EventBusEngine
 from .memory_engine import MemoryEngine
+from .planner import PlannerEngine
+from .scheduler import SchedulerEngine
+from .execution import ExecutionEngine
+from .evolution import EvolutionEngine
 from .engines import KernelV2
 from .lifecycle import RuntimeLifecycleManager
 from .resource_manager import RuntimeResourceManager
