@@ -1,7 +1,7 @@
 from maraim.kernel2 import MaraimKernel
 from maraim.database.schema import init_db
 from maraim.scraping.engine import run_source
-from maraim.runtime.freelance import analyze_project
+from maraim.runtime.freelance import analyze_project, generate_proposal
 
 _kernel = None
 _db = None
@@ -24,10 +24,22 @@ def analysis_runner(task):
         project_id = row['id']
     return analyze_project(_db, int(project_id))
 
+def proposal_runner(task):
+    global _db
+    if _db is None:
+        _db = init_db('data/maraim.sqlite')
+    project_id = task.get('project_id')
+    if not project_id:
+        row = _db.execute('SELECT id FROM projects ORDER BY fit_score DESC, id DESC LIMIT 1').fetchone()
+        if not row:
+            return {'ok': False, 'error': 'no_project_available'}
+        project_id = row['id']
+    return generate_proposal(_db, int(project_id))
+
 def get_kernel():
     global _kernel
     if _kernel is None:
-        _kernel = MaraimKernel(scraping_runner=scraping_runner, analysis_runner=analysis_runner)
+        _kernel = MaraimKernel(scraping_runner=scraping_runner, analysis_runner=analysis_runner, proposal_runner=proposal_runner)
         _kernel.start()
     return _kernel
 
