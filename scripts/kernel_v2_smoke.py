@@ -15,7 +15,8 @@ research = kernel.resources.resolve_capability("research")
 mission = kernel.resources.resolve_capability("mission_planning")
 swarm = kernel.resources.resolve_capability("swarm_spawn")
 mission_edges = kernel.graph.outgoing(MISSION_ID)
-execution = kernel.execution.execute(MISSION_ID, {"topic": "kernel v2 smoke"})
+plan = kernel.planner.plan(MISSION_ID, {"topic": "kernel v2 smoke"})
+execution = kernel.execution.execute_plan(plan)
 
 print("MARAIM_KERNEL_V2_SMOKE_OK")
 print(status["state"])
@@ -26,6 +27,7 @@ print(research)
 print(mission)
 print(swarm)
 print([edge.__dict__ for edge in mission_edges])
+print(plan)
 print(execution)
 
 assert status["state"] == "running"
@@ -36,6 +38,9 @@ assert research["ok"] is True
 assert mission["ok"] is True
 assert swarm["ok"] is True
 assert {edge.relation for edge in mission_edges} >= {"uses_agent", "uses_model", "uses_swarm"}
+assert plan["ok"] is True
+assert plan["task_count"] >= 4
 assert execution["ok"] is True
-assert len(execution["children"]) >= 3
-assert {child["relation"] for child in execution["children"]} >= {"uses_agent", "uses_model", "uses_swarm"}
+assert execution["completed_count"] >= 4
+assert execution["failed_count"] == 0
+assert {item["task"]["relation"] for item in execution["completed"]} >= {"root", "uses_agent", "uses_model", "uses_swarm"}
