@@ -2,13 +2,14 @@
 import time
 
 class TaskExecutorRuntime:
-    def __init__(self, event_bus, memory, organization, scraping_runner=None, analysis_runner=None, proposal_runner=None):
+    def __init__(self, event_bus, memory, organization, scraping_runner=None, analysis_runner=None, proposal_runner=None, approval_runtime=None):
         self.event_bus = event_bus
         self.memory = memory
         self.organization = organization
         self.scraping_runner = scraping_runner
         self.analysis_runner = analysis_runner
         self.proposal_runner = proposal_runner
+        self.approval_runtime = approval_runtime
         self.executions = []
 
     def execute(self, task):
@@ -57,6 +58,9 @@ class TaskExecutorRuntime:
                 return self.proposal_runner(task)
             return "Proposal generation task executed by proposal team."
         if t == "approval_wait":
+            
+            if self.approval_runtime:
+                return self.approval_runtime.create(task, {"source": "workflow"})
             return "Approval task created and waiting for user decision."
         if t == "remember":
             return "Workflow result stored in memory."

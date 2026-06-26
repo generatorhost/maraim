@@ -12,6 +12,7 @@ from .organization_runtime import OrganizationRuntime
 from .memory_runtime import MemoryRuntime
 from .scheduler_runtime import SchedulerRuntime
 from .workflow_runtime import WorkflowRuntime
+from .approval_runtime import ApprovalRuntime
 from .task_executor_runtime import TaskExecutorRuntime
 
 class MaraimKernel:
@@ -26,11 +27,12 @@ class MaraimKernel:
         self.memory_runtime = MemoryRuntime(self.event_bus)
         self.scheduler_runtime = SchedulerRuntime(self.event_bus)
         self.workflow_runtime = WorkflowRuntime(self.event_bus, self.registry, self.scheduler_runtime, self.memory_runtime)
+        self.approval_runtime = ApprovalRuntime(self.event_bus, self.memory_runtime)
         self.agent_runtime = AgentRuntime(self.event_bus, self.registry, self.mcp_runtime)
         self.team_runtime = TeamRuntime(self.event_bus, self.registry, self.agent_runtime)
         self.chief_runtime = ChiefRuntime(self.event_bus, self.registry, self.team_runtime)
         self.organization_runtime = OrganizationRuntime(self.event_bus, self.chief_runtime, self.team_runtime, self.agent_runtime)
-        self.task_executor_runtime = TaskExecutorRuntime(self.event_bus, self.memory_runtime, self.organization_runtime, scraping_runner=scraping_runner, analysis_runner=analysis_runner, proposal_runner=proposal_runner)
+        self.task_executor_runtime = TaskExecutorRuntime(self.event_bus, self.memory_runtime, self.organization_runtime, scraping_runner=scraping_runner, analysis_runner=analysis_runner, proposal_runner=proposal_runner, approval_runtime=self.approval_runtime)
         self.boot_log = []
 
     def boot(self):
@@ -39,6 +41,7 @@ class MaraimKernel:
             "event_bus": self.event_bus, "registry": self.registry, "runtime_manager": self.runtime_manager,
             "dna_runtime": self.dna_runtime, "mcp_runtime": self.mcp_runtime, "memory_runtime": self.memory_runtime,
             "scheduler_runtime": self.scheduler_runtime, "workflow_runtime": self.workflow_runtime,
+            "approval_runtime": self.approval_runtime,
             "agent_runtime": self.agent_runtime, "team_runtime": self.team_runtime, "chief_runtime": self.chief_runtime,
             "organization_runtime": self.organization_runtime,
             "task_executor_runtime": self.task_executor_runtime,
@@ -51,6 +54,7 @@ class MaraimKernel:
         self.runtime_manager.mount("memory", self.memory_runtime)
         self.runtime_manager.mount("scheduler", self.scheduler_runtime)
         self.runtime_manager.mount("workflow", self.workflow_runtime)
+        self.runtime_manager.mount("approval", self.approval_runtime)
         self.runtime_manager.mount("agents", self.agent_runtime)
         self.runtime_manager.mount("teams", self.team_runtime)
         self.runtime_manager.mount("chief", self.chief_runtime)
@@ -103,6 +107,7 @@ class MaraimKernel:
             "registry_counts": self.registry.counts(),
             "organization": self.organization_runtime.status(),
             "workflow": self.workflow_runtime.status(),
+            "approval": self.approval_runtime.status(),
             "scheduler": self.scheduler_runtime.status(),
             "memory": self.memory_runtime.status(),
             "task_executor": self.task_executor_runtime.status(),
@@ -121,4 +126,5 @@ class MaraimKernel:
         self.mcp_runtime.register_tool("workflow.run", lambda payload: self.run_workflow(payload.get("workflow_id", "project-acquisition"), payload), "Run workflow through Scheduler")
         self.mcp_runtime.register_tool("memory.status", lambda _: self.memory_runtime.status(), "Return memory status")
         self.mcp_runtime.register_tool("scheduler.status", lambda _: self.scheduler_runtime.status(), "Return scheduler status")
+        self.mcp_runtime.register_tool("approval.create", lambda payload: self.approval_runtime.create(payload.get("task", {}), payload.get("context", {})), "Create approval request")
         self.mcp_runtime.register_tool("scheduler.run_next", lambda _: self.run_next_task(), "Run next queued task")
