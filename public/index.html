@@ -33,6 +33,7 @@ pre{white-space:pre-wrap;background:#0e101a;border:1px solid var(--line);padding
 </aside>
 <main>
  <div class="page active" id="dashboard"><h1>الرئيسية</h1><div class="card"><button onclick="refresh()">تحديث</button></div><div id="status" class="grid"></div></div>
+ <div class="page" id="kernel2"><h1>?? Kernel 2</h1><div class="card"><button onclick="loadKernel2()">????? Kernel</button><button onclick="runKernelWorkflow()">????? Project Acquisition Workflow</button><pre id="kernel2Box"></pre></div></div>
  <div class="page" id="scraping"><h1>🕷️ Scraping</h1><div class="card"><button onclick="runSource()">تشغيل مصدر المشاريع التجريبي</button></div><div class="card"><h3>المصادر</h3><div id="sources"></div></div></div>
  <div class="page" id="inbox"><h1>📥 Project Inbox</h1><div class="card"><button onclick="loadProjects()">تحديث</button><div id="projects"></div></div></div>
  <div class="page" id="decision"><h1>🎯 تحليل/عرض</h1><div class="card"><input id="pid" placeholder="Project ID"><button onclick="analyze()">تحليل</button> <button onclick="proposal()">توليد Proposal</button><pre id="decisionOut"></pre></div></div>
@@ -48,6 +49,8 @@ async function api(path,opts){let r=await fetch(path,opts);return await r.json()
 function card(k,v){return `<div class="card"><h3>${k}</h3><div style="font-size:28px;font-weight:800">${v}</div></div>`}
 async function refresh(){let s=await api('/api/status');$('status').innerHTML=Object.entries(s.counts).map(([k,v])=>card(k,v)).join('')+card('version',s.version);}
 async function loadSources(){let d=await api('/api/sources');$('sources').innerHTML='<table><tr><th>ID</th><th>الاسم</th><th>النوع</th><th>كلمات</th></tr>'+d.map(x=>`<tr><td>${x.id}</td><td>${x.name}</td><td>${x.kind}</td><td>${x.keywords||''}</td></tr>`).join('')+'</table>'}
+async function loadKernel2(){let d=await api('/api/kernel2/status');document.getElementById('kernel2Box').textContent=JSON.stringify(d,null,2);}
+async function runKernelWorkflow(){let d=await api('/api/kernel2/workflow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({workflow_id:'project-acquisition',source:'ui'})});document.getElementById('kernel2Box').textContent=JSON.stringify(d,null,2);refresh();}
 async function runSource(){let d=await api('/api/sources/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source_id:1})});alert(JSON.stringify(d));loadProjects();refresh();}
 async function loadProjects(){let d=await api('/api/projects');$('projects').innerHTML='<table><tr><th>ID</th><th>Score</th><th>العنوان</th><th>الميزانية</th><th>الحالة</th></tr>'+d.map(x=>`<tr><td>${x.id}</td><td>${x.fit_score}</td><td>${x.title}<br><span class="pill">${x.platform}</span></td><td>${x.budget||''}</td><td>${x.status}</td></tr>`).join('')+'</table>'}
 async function analyze(){let d=await api('/api/projects/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project_id:Number($('pid').value)})});$('decisionOut').textContent=JSON.stringify(d,null,2);refresh();}
@@ -57,7 +60,7 @@ async function loadMcp(){let d=await api('/api/mcp');$('mcpBox').innerHTML='<h3>
 async function runMcpCompile(){let d=await api('/api/mcp/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tool_key:'compile_dna',params:{}})});alert(JSON.stringify(d));loadMcp();refresh();}
 async function compileDna(){let d=await api('/api/dna/compile',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});$('dnaOut').textContent=JSON.stringify(d,null,2);refresh();}
 async function ask(){let q=$('chatInput').value.trim();if(!q)return;$('chatInput').value='';$('chatMsgs').innerHTML+=`<div class="msg user">${q}</div>`;let d=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q})});$('chatMsgs').innerHTML+=`<div class="msg ai">${d.response}</div>`;$('chatMsgs').scrollTop=$('chatMsgs').scrollHeight;refresh();}
-refresh();loadSources();loadProjects();loadApprovals();loadMcp();
+refresh();loadSources();loadProjects();loadApprovals();loadMcp();loadKernel2();
 </script>
 </body>
 </html>
