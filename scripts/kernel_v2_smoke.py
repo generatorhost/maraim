@@ -20,6 +20,10 @@ scheduled = kernel.scheduler.schedule_plan(plan)
 run_next = kernel.scheduler.run_next()
 run_all = kernel.scheduler.run_all()
 evolution_status = kernel.evolution.status()
+memory_status = kernel.memory.status()
+episodic = kernel.memory.recall("episodic")
+procedural = kernel.memory.recall("procedural")
+dna_memory = kernel.memory.recall("dna")
 
 print("MARAIM_KERNEL_V2_SMOKE_OK")
 print(status["state"])
@@ -35,6 +39,10 @@ print(scheduled)
 print(run_next)
 print(run_all)
 print(evolution_status)
+print(memory_status)
+print(episodic)
+print(procedural)
+print(dna_memory)
 
 assert status["state"] == "running"
 assert status["graph"]["nodes"] >= 4
@@ -55,3 +63,9 @@ assert run_all["status"]["failed"] == 0
 assert evolution_status["experiences"] >= 1
 assert evolution_status["lessons"] >= 1
 assert evolution_status["last_lesson"]["recommendation"] == "reuse_current_task_graph"
+assert memory_status["episodic"] >= 1
+assert memory_status["procedural"] >= 1
+assert memory_status["dna"] >= 1
+assert episodic["ok"] is True
+assert procedural["ok"] is True
+assert dna_memory["ok"] is True
