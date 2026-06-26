@@ -12,6 +12,7 @@ from .organization_runtime import OrganizationRuntime
 from .memory_runtime import MemoryRuntime
 from .scheduler_runtime import SchedulerRuntime
 from .workflow_runtime import WorkflowRuntime
+from .task_executor_runtime import TaskExecutorRuntime
 
 class MaraimKernel:
     def __init__(self, dna_root="dna/source"):
@@ -29,6 +30,7 @@ class MaraimKernel:
         self.team_runtime = TeamRuntime(self.event_bus, self.registry, self.agent_runtime)
         self.chief_runtime = ChiefRuntime(self.event_bus, self.registry, self.team_runtime)
         self.organization_runtime = OrganizationRuntime(self.event_bus, self.chief_runtime, self.team_runtime, self.agent_runtime)
+        self.task_executor_runtime = TaskExecutorRuntime(self.event_bus, self.memory_runtime, self.organization_runtime)
         self.boot_log = []
 
     def boot(self):
@@ -39,6 +41,7 @@ class MaraimKernel:
             "scheduler_runtime": self.scheduler_runtime, "workflow_runtime": self.workflow_runtime,
             "agent_runtime": self.agent_runtime, "team_runtime": self.team_runtime, "chief_runtime": self.chief_runtime,
             "organization_runtime": self.organization_runtime,
+            "task_executor_runtime": self.task_executor_runtime,
         }
         for name, service in services.items():
             self.container.register(name, lambda service=service: service)
@@ -52,6 +55,7 @@ class MaraimKernel:
         self.runtime_manager.mount("teams", self.team_runtime)
         self.runtime_manager.mount("chief", self.chief_runtime)
         self.runtime_manager.mount("organization", self.organization_runtime)
+        self.runtime_manager.mount("task_executor", self.task_executor_runtime)
 
         self._register_builtin_tools()
         self._set_state(KernelState.READY)
@@ -86,10 +90,9 @@ class MaraimKernel:
         if not item:
             return {"ok": False, "error": "queue_empty"}
         task = item["task"]
-        routed = self.organization_runtime.route_task(task)
-        self.memory_runtime.remember_long({"executed_task": task, "routed": routed})
-        self.scheduler_runtime.complete(item["id"], routed)
-        return {"ok": True, "task_id": item["id"], "task": task, "routed": routed}
+        executed = self.task_executor_runtime.execute(task)
+        self.scheduler_runtime.complete(item["id"], executed)
+        return {"ok": True, "task_id": item["id"], "task": task, "executed": executed}
 
     def status(self):
         return {
@@ -101,6 +104,7 @@ class MaraimKernel:
             "workflow": self.workflow_runtime.status(),
             "scheduler": self.scheduler_runtime.status(),
             "memory": self.memory_runtime.status(),
+            "task_executor": self.task_executor_runtime.status(),
             "mcp_tools": self.mcp_runtime.list_tools(),
         }
 
