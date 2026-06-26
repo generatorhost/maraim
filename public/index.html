@@ -14,7 +14,7 @@ main{flex:1;overflow:auto;padding:24px}.page{display:none}.page.active{display:b
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
 button{background:var(--blue);color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
-pre{white-space:pre-wrap;background:#0b0e18;border:1px solid var(--line);border-radius:12px;padding:12px;max-height:420px;overflow:auto}
+pre{white-space:pre-wrap;background:#0b0e18;border:1px solid var(--line);border-radius:12px;padding:12px;max-height:420px;overflow:auto}.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:12px 0}.step{border:1px solid var(--line);border-radius:14px;padding:12px;background:#111625}.step.done{border-color:#36d399}.step.active{border-color:#4c8dff}.step.wait{opacity:.75}.bar{height:10px;background:#0b0e18;border-radius:20px;overflow:hidden;border:1px solid var(--line)}.bar span{display:block;height:100%;background:var(--blue)}
 </style>
 </head>
 <body>
@@ -54,16 +54,26 @@ async function loadAll(){
  $('schedulerBox').textContent=JSON.stringify(K.scheduler,null,2);
  $('memoryBox').textContent=JSON.stringify(K.memory,null,2);
  $('mcpBox').textContent=JSON.stringify(K.mcp_tools,null,2);
- $('rawBox').textContent=JSON.stringify(K,null,2);
+ $('rawBox').textContent=JSON.stringify(K,null,2);let runs=Object.values((K.workflow||{}).runs||{});let latest=runs[runs.length-1];renderWorkflowVisual(latest||null);
 }
 async function runNextTask(){
  let d=await api('/api/kernel2/run-next',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
  $('lastTaskBox').textContent=JSON.stringify(d,null,2);
  await loadAll();
 }
+function renderWorkflowVisual(run){
+ if(!run){document.getElementById('workflowVisual').innerHTML='';return;}
+ let steps=(run.steps||[]).map(x=>{
+   let cls=x.status==='completed'?'done':(x.id===run.current_step?'active':'wait');
+   let icon=x.status==='completed'?'DONE':(x.id===run.current_step?'NOW':'WAIT');
+   return `<div class="step ${cls}"><h3>${icon} ${x.id}</h3><div>${x.type}</div><small>${x.status}</small></div>`;
+ }).join('');
+ document.getElementById('workflowVisual').innerHTML =
+   `<div class="card"><h3>Run: ${run.run_id}</h3><div>Current: ${run.current_step||'complete'} | Progress: ${run.progress}%</div><div class="bar"><span style="width:${run.progress}%"></span></div><div class="steps">${steps}</div></div>`;
+}
 async function runWorkflow(){
  let d=await api('/api/kernel2/workflow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({workflow_id:'project-acquisition',source:'ui'})});
- $('workflowBox').textContent=JSON.stringify(d,null,2);
+ $('workflowBox').textContent=JSON.stringify(d,null,2);renderWorkflowVisual(d.state||null);
  await loadAll();
 }
 loadAll();
