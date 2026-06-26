@@ -1,9 +1,8 @@
 import importlib.util
 import inspect
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Type
+from typing import Any, Dict, Iterable, List
 
-from .runtime_graph import RuntimeGraph
 from .runtime_object import RuntimeObject
 
 
@@ -31,16 +30,29 @@ class DNAManager:
         return objects
 
     def mount_all(self, kernel: Any) -> Dict[str, Any]:
+        """Mount all DNA RuntimeObjects in deterministic lifecycle phases.
+
+        Two-pass mounting is required because RuntimeObjects may create graph
+        relations during connect(). All nodes must exist before any runtime
+        attempts to connect to another runtime.
+        """
         if not self.discovered:
             self.discover()
+
+        active = [obj for obj in self.discovered.values() if obj.id not in self.disabled]
         mounted = []
-        for obj in self.discovered.values():
-            if obj.id in self.disabled:
-                continue
-            obj.discover(kernel).validate(kernel).mount(kernel).connect(kernel)
+        connected = []
+
+        for obj in active:
+            obj.discover(kernel).validate(kernel).mount(kernel)
             kernel.graph.add_node(obj)
             mounted.append(obj.id)
-        return {"ok": True, "mounted": mounted}
+
+        for obj in active:
+            obj.connect(kernel)
+            connected.append(obj.id)
+
+        return {"ok": True, "mounted": mounted, "connected": connected}
 
     def add_runtime(self, obj: RuntimeObject) -> RuntimeObject:
         if obj.id in self.discovered:
