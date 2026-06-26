@@ -9,6 +9,7 @@ from maraim.scraping.sprint2b_runtime import ensure_sprint2b, scraping_runtime_s
 from maraim.runtime.freelance import analyze_project, generate_proposal
 from maraim.mcp.tools import run_tool
 from maraim.ai.ollama_router import generate
+from maraim.kernel2.app_bridge import kernel_status, route_task, run_workflow
 
 DB_PATH = "data/maraim.sqlite"
 db = init_db(DB_PATH)
@@ -48,12 +49,16 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         path = urllib.parse.urlparse(self.path).path
 
+        if path == "/api/kernel2/status":
+            self.send_json(kernel_status()); return
+
         if path == "/api/status":
             self.send_json({
                 "ok": True,
                 "name": "maraim",
                 "version": "1.0-sprint2b",
                 "db": DB_PATH,
+                "kernel2": kernel_status(),
                 "counts": {
                     "projects": safe_count("projects"),
                     "runtime_objects": safe_count("runtime_objects"),
@@ -86,6 +91,11 @@ class Handler(SimpleHTTPRequestHandler):
     def do_POST(self):
         path = urllib.parse.urlparse(self.path).path
         body = self.read_json()
+
+        if path == "/api/kernel2/route":
+            self.send_json(route_task(body)); return
+        if path == "/api/kernel2/workflow":
+            self.send_json(run_workflow(body.get("workflow_id", "project-acquisition"), body)); return
 
         if path == "/api/dna/compile":
             self.send_json(compile_dna(db, Path("dna/source"))); return
@@ -140,5 +150,5 @@ class Handler(SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     port = int(os.environ.get("MARAIM_PORT", "8790"))
-    print(f"maraim 1.0 sprint2b running at http://127.0.0.1:{port}")
+    print(f"maraim 1.0 kernel2 bridge running at http://127.0.0.1:{port}")
     ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
