@@ -7,6 +7,7 @@ from .planner import PlannerEngine
 from .scheduler import SchedulerEngine
 from .execution import ExecutionEngine
 from .evolution import EvolutionEngine
+from .dna_extractor_engine import DNAExtractorEngine
 from .engines import KernelV2
 from .lifecycle import RuntimeLifecycleManager
 from .resource_manager import RuntimeResourceManager
