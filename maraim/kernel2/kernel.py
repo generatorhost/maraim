@@ -15,7 +15,7 @@ from .workflow_runtime import WorkflowRuntime
 from .task_executor_runtime import TaskExecutorRuntime
 
 class MaraimKernel:
-    def __init__(self, dna_root="dna/source", scraping_runner=None):
+    def __init__(self, dna_root="dna/source", scraping_runner=None, analysis_runner=None):
         self.state = KernelState.CREATED
         self.container = ServiceContainer()
         self.event_bus = EventBus()
@@ -30,7 +30,7 @@ class MaraimKernel:
         self.team_runtime = TeamRuntime(self.event_bus, self.registry, self.agent_runtime)
         self.chief_runtime = ChiefRuntime(self.event_bus, self.registry, self.team_runtime)
         self.organization_runtime = OrganizationRuntime(self.event_bus, self.chief_runtime, self.team_runtime, self.agent_runtime)
-        self.task_executor_runtime = TaskExecutorRuntime(self.event_bus, self.memory_runtime, self.organization_runtime, scraping_runner=scraping_runner)
+        self.task_executor_runtime = TaskExecutorRuntime(self.event_bus, self.memory_runtime, self.organization_runtime, scraping_runner=scraping_runner, analysis_runner=analysis_runner)
         self.boot_log = []
 
     def boot(self):
