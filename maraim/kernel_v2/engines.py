@@ -28,6 +28,59 @@ class ResourceEngine:
         return {"ok": True, "capability": capability, "runtime": matches[0].status(), "candidates": [m.id for m in matches]}
 
 
+class MemoryEngine:
+    """In-kernel memory foundation for runtime experience.
+
+    This is intentionally in-memory only for v2 foundation. Storage-backed
+    memory can be mounted later as a DNA RuntimeObject or Storage Engine layer.
+    """
+
+    def __init__(self, kernel: "KernelV2"):
+        self.kernel = kernel
+        self.working: List[Dict[str, Any]] = []
+        self.long: List[Dict[str, Any]] = []
+        self.semantic: List[Dict[str, Any]] = []
+        self.procedural: List[Dict[str, Any]] = []
+        self.episodic: List[Dict[str, Any]] = []
+        self.collective: List[Dict[str, Any]] = []
+        self.dna: List[Dict[str, Any]] = []
+
+    def remember(self, space: str, item: Dict[str, Any]) -> Dict[str, Any]:
+        target = getattr(self, space, None)
+        if target is None or not isinstance(target, list):
+            return {"ok": False, "error": "memory_space_not_found", "space": space}
+        record = dict(item)
+        record.setdefault("timestamp", time.time())
+        record.setdefault("space", space)
+        target.append(record)
+        self.kernel.emit("memory.recorded", {"space": space, "count": len(target)})
+        return {"ok": True, "space": space, "record": record}
+
+    def recall(self, space: str, limit: int = 10) -> Dict[str, Any]:
+        target = getattr(self, space, None)
+        if target is None or not isinstance(target, list):
+            return {"ok": False, "error": "memory_space_not_found", "space": space}
+        return {"ok": True, "space": space, "items": target[-limit:]}
+
+    def remember_experience(self, experience: Dict[str, Any], lesson: Dict[str, Any]) -> Dict[str, Any]:
+        self.remember("episodic", {"type": "experience", "data": experience})
+        self.remember("procedural", {"type": "lesson", "data": lesson})
+        if lesson.get("recommendation"):
+            self.remember("dna", {"type": "evolution_recommendation", "data": lesson})
+        return {"ok": True, "experience_id": experience.get("id"), "lesson_id": lesson.get("id")}
+
+    def status(self) -> Dict[str, Any]:
+        return {
+            "working": len(self.working),
+            "long": len(self.long),
+            "semantic": len(self.semantic),
+            "procedural": len(self.procedural),
+            "episodic": len(self.episodic),
+            "collective": len(self.collective),
+            "dna": len(self.dna),
+        }
+
+
 class PlannerEngine:
     """Builds an executable task graph from RuntimeGraph relations."""
 
@@ -178,6 +231,7 @@ class EvolutionEngine:
         self.experiences.append(experience)
         lesson = self._lesson_from_experience(experience)
         self.lessons.append(lesson)
+        self.kernel.memory.remember_experience(experience, lesson)
         self.kernel.emit("evolution.experience_recorded", {"experience_id": experience["id"], "success": experience["success"]})
         return {"ok": True, "experience": experience, "lesson": lesson}
 
@@ -270,6 +324,7 @@ class KernelV2:
         self.dna = DNAManager(dna_root)
         self.objects = ObjectEngine(self.graph)
         self.resources = ResourceEngine(self.graph)
+        self.memory = MemoryEngine(self)
         self.planner = PlannerEngine(self)
         self.evolution = EvolutionEngine(self)
         self.scheduler = SchedulerEngine(self)
@@ -297,6 +352,7 @@ class KernelV2:
             "state": self.state,
             "dna": self.dna.status(),
             "graph": self.graph.status(),
+            "memory": self.memory.status(),
             "planner": self.planner.status(),
             "scheduler": self.scheduler.status(),
             "execution": self.execution.status(),
