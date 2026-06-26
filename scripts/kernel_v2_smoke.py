@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from maraim.kernel_v2 import KernelV2, RuntimeLifecycleManager
+from maraim.kernel_v2 import KernelV2, RuntimeLifecycleManager, RuntimeResourceManager
 
 MISSION_ID = "missions.sample.research_mission@1.0.0"
 
@@ -34,6 +34,11 @@ lifecycle_busy = lifecycle.transition(MISSION_ID, "busy", reason="smoke_executio
 lifecycle_heartbeat = lifecycle.heartbeat(MISSION_ID, latency_ms=1, load=1, queue=0)
 lifecycle_idle = lifecycle.transition(MISSION_ID, "idle", reason="smoke_completed")
 lifecycle_status = lifecycle.status()
+resources = RuntimeResourceManager(kernel, capacity={"cpu_units": 16, "ram_mb": 2048, "threads": 8})
+resource_allocate = resources.allocate(MISSION_ID, {"cpu_units": 2, "ram_mb": 256, "threads": 1}, reason="smoke_execution")
+resource_rebalance = resources.rebalance()
+resource_release = resources.release(MISSION_ID)
+resource_status = resources.status()
 
 print("MARAIM_KERNEL_V2_SMOKE_OK")
 print(status["state"])
@@ -62,6 +67,10 @@ print(lifecycle_busy)
 print(lifecycle_heartbeat)
 print(lifecycle_idle)
 print(lifecycle_status)
+print(resource_allocate)
+print(resource_rebalance)
+print(resource_release)
+print(resource_status)
 
 assert status["state"] == "running"
 assert status["graph"]["nodes"] >= 4
@@ -106,3 +115,8 @@ assert lifecycle_idle["ok"] is True
 assert lifecycle_status["runtimes"] >= 4
 assert lifecycle_status["healthy"] >= 4
 assert lifecycle_status["transitions"] >= 2
+assert resource_allocate["ok"] is True
+assert resource_rebalance["ok"] is True
+assert resource_release["ok"] is True
+assert resource_status["allocations"] == 0
+assert resource_status["history"] >= 3
