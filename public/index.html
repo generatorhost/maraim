@@ -2,87 +2,66 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"/>
-<title>maraim</title>
+<title>maraim Kernel</title>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <style>
-:root{--bg:#0b0c13;--panel:#141725;--panel2:#191d2f;--line:#292f49;--txt:#e9e9f4;--muted:#8b91aa;--blue:#4c8dff;--green:#00d27a}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:Segoe UI,Tahoma,Arial,sans-serif;display:flex;height:100vh;overflow:hidden}
-aside{width:250px;background:#0e101a;border-left:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:8px}
-.logo{font-size:24px;font-weight:800;margin-bottom:16px}.logo small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
-.nav{padding:12px;border-radius:10px;color:#cbd0e8;cursor:pointer}.nav:hover,.nav.active{background:var(--panel2);color:white}
-main{flex:1;overflow:auto;padding:24px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
-h1,h2,h3{margin:0 0 12px}button{background:var(--blue);color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
-input{width:100%;background:#0e101a;border:1px solid var(--line);color:white;border-radius:10px;padding:10px;margin:6px 0}
-table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid var(--line);padding:10px;text-align:right;font-size:13px;vertical-align:top}th{color:var(--muted)}
-.page{display:none}.page.active{display:block}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#24304f;color:#bcd0ff;font-size:12px}
-pre{white-space:pre-wrap;background:#0e101a;border:1px solid var(--line);padding:12px;border-radius:12px;max-height:320px;overflow:auto}
-.chat{height:330px;overflow:auto;background:#0e101a;border:1px solid var(--line);border-radius:12px;padding:12px}.msg{padding:10px;border-radius:10px;margin:8px 0}.user{background:#1d2540}.ai{background:#10251d}
+:root{--bg:#090b12;--panel:#141827;--line:#29304a;--txt:#f4f5ff;--muted:#98a0bd;--blue:#4c8dff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:Segoe UI,Tahoma,Arial,sans-serif;display:flex;height:100vh}
+aside{width:250px;background:#0d101b;border-left:1px solid var(--line);padding:18px}
+.logo{font-size:28px;font-weight:900}.logo small{display:block;color:var(--muted);font-size:12px}
+.nav{padding:13px;border-radius:12px;cursor:pointer;margin-top:8px}.nav:hover,.nav.active{background:#1a2035}
+main{flex:1;overflow:auto;padding:24px}.page{display:none}.page.active{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+button{background:var(--blue);color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+pre{white-space:pre-wrap;background:#0b0e18;border:1px solid var(--line);border-radius:12px;padding:12px;max-height:420px;overflow:auto}
 </style>
 </head>
 <body>
 <aside>
- <div class="logo">maraim <small>AI Freelance Worker</small></div>
- <div class="nav active" data-page="dashboard">📊 الرئيسية</div>
- <div class="nav" data-page="scraping">🕷️ Scraping</div>
- <div class="nav" data-page="inbox">📥 Project Inbox</div>
- <div class="nav" data-page="decision">🎯 تحليل/عرض</div>
- <div class="nav" data-page="approval">✅ الموافقات</div>
- <div class="nav" data-page="mcp">🔌 MCP</div>
- <div class="nav" data-page="dna">🧬 DNA</div>
- <div class="nav" data-page="chat">💬 Chat واحد</div>
+ <div class="logo">maraim <small>AI Freelance Worker Kernel</small></div>
+ <div class="nav active" data-page="dashboard">?? Dashboard</div>
+ <div class="nav" data-page="kernel">?? Kernel</div>
+ <div class="nav" data-page="org">?? Organization</div>
+ <div class="nav" data-page="scheduler">?? Scheduler</div>
+ <div class="nav" data-page="memory">?? Memory</div>
+ <div class="nav" data-page="workflow">?? Workflows</div>
+ <div class="nav" data-page="mcp">?? MCP</div>
+ <div class="nav" data-page="raw">?? Raw Status</div>
 </aside>
 <main>
- <div class="page active" id="dashboard"><h1>الرئيسية</h1><div class="card"><button onclick="refresh()">تحديث</button></div><div id="status" class="grid"></div></div>
- <div class="page" id="kernel2"><h1>?? Kernel 2</h1><div class="card"><button onclick="loadKernel2()">????? Kernel</button><button onclick="runKernelWorkflow()">????? Project Acquisition Workflow</button><pre id="kernel2Box"></pre></div></div>
- <div class="page" id="scraping"><h1>🕷️ Scraping</h1><div class="card"><button onclick="runSource()">تشغيل مصدر المشاريع التجريبي</button></div><div class="card"><h3>المصادر</h3><div id="sources"></div></div></div>
- <div class="page" id="inbox"><h1>📥 Project Inbox</h1><div class="card"><button onclick="loadProjects()">تحديث</button><div id="projects"></div></div></div>
- <div class="page" id="decision"><h1>🎯 تحليل/عرض</h1><div class="card"><input id="pid" placeholder="Project ID"><button onclick="analyze()">تحليل</button> <button onclick="proposal()">توليد Proposal</button><pre id="decisionOut"></pre></div></div>
- <div class="page" id="approval"><h1>✅ الموافقات</h1><div class="card"><button onclick="loadApprovals()">تحديث</button><div id="approvals"></div></div></div>
- <div class="page" id="mcp"><h1>🔌 MCP Tools</h1><div class="card"><button onclick="loadMcp()">تحديث</button><button onclick="runMcpCompile()">تشغيل compile_dna</button><div id="mcpBox"></div></div></div>
- <div class="page" id="dna"><h1>🧬 DNA</h1><div class="card"><p>ضع ملفات DNA داخل <b>dna/source</b> ثم اضغط Compile.</p><button onclick="compileDna()">Compile DNA</button><pre id="dnaOut"></pre></div></div>
- <div class="page" id="chat"><h1>💬 Chat واحد</h1><div class="card"><div class="chat" id="chatMsgs"><div class="msg ai">maraim جاهز. اكتب: اجلب مشاريع / حلل / اكتب عرض</div></div><input id="chatInput" onkeydown="if(event.key==='Enter')ask()" placeholder="اكتب هنا..."><button onclick="ask()">إرسال</button></div></div>
+ <div class="page active" id="dashboard"><h1>Dashboard</h1><button onclick="loadAll()">?????</button><div id="dash" class="grid"></div></div>
+ <div class="page" id="kernel"><h1>Kernel</h1><div id="kernelBox"></div></div>
+ <div class="page" id="org"><h1>Chief / Teams / Agents</h1><pre id="orgBox"></pre></div>
+ <div class="page" id="scheduler"><h1>Scheduler</h1><pre id="schedulerBox"></pre></div>
+ <div class="page" id="memory"><h1>Memory</h1><pre id="memoryBox"></pre></div>
+ <div class="page" id="workflow"><h1>Workflows</h1><button onclick="runWorkflow()">????? Project Acquisition</button><pre id="workflowBox"></pre></div>
+ <div class="page" id="mcp"><h1>MCP</h1><pre id="mcpBox"></pre></div>
+ <div class="page" id="raw"><h1>Raw Kernel Status</h1><pre id="rawBox"></pre></div>
 </main>
 <script>
 const $=id=>document.getElementById(id);
+let K=null;
 document.querySelectorAll('.nav').forEach(n=>n.onclick=()=>{document.querySelectorAll('.nav').forEach(x=>x.classList.remove('active'));n.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$(n.dataset.page).classList.add('active');});
-async function api(path,opts){let r=await fetch(path,opts);return await r.json();}
-function card(k,v){return `<div class="card"><h3>${k}</h3><div style="font-size:28px;font-weight:800">${v}</div></div>`}
-async function refresh(){let s=await api('/api/status');$('status').innerHTML=Object.entries(s.counts).map(([k,v])=>card(k,v)).join('')+card('version',s.version);}
-async function loadSources(){let d=await api('/api/sources');$('sources').innerHTML='<table><tr><th>ID</th><th>الاسم</th><th>النوع</th><th>كلمات</th></tr>'+d.map(x=>`<tr><td>${x.id}</td><td>${x.name}</td><td>${x.kind}</td><td>${x.keywords||''}</td></tr>`).join('')+'</table>'}
-function renderKernel2(d){
- let org=d.organization||{}, sch=d.scheduler||{}, mem=d.memory||{}, reg=d.registry_counts||{};
- document.getElementById('kernel2Box').innerHTML =
-  '<div class="grid">'+
-  card('State',d.state)+
-  card('Agents',reg.agent||0)+
-  card('Teams',reg.team||0)+
-  card('Chiefs',reg.chief||0)+
-  card('Workflows',reg.workflow||0)+
-  card('Queued',sch.queued||0)+
-  card('Working Memory',mem.working||0)+
-  card('Long Memory',mem.long||0)+
-  '</div>'+
-  '<div class="card"><h3>Organization Runtime</h3><pre>'+JSON.stringify(org,null,2)+'</pre></div>'+
-  '<div class="card"><h3>MCP Tools</h3><pre>'+JSON.stringify(d.mcp_tools||[],null,2)+'</pre></div>';
+async function api(p,o){let r=await fetch(p,o);return await r.json();}
+function card(k,v){return `<div class="card"><h3>${k}</h3><div style="font-size:30px;font-weight:900">${v}</div></div>`}
+async function loadAll(){
+ K=await api('/api/kernel2/status');
+ let r=K.registry_counts||{}, s=K.scheduler||{}, m=K.memory||{};
+ $('dash').innerHTML=card('State',K.state)+card('Agents',r.agent||0)+card('Teams',r.team||0)+card('Chiefs',r.chief||0)+card('Workflows',r.workflow||0)+card('Queued',s.queued||0)+card('Working Memory',m.working||0)+card('Long Memory',m.long||0);
+ $('kernelBox').innerHTML='<div class="grid">'+card('State',K.state)+card('Services',K.services.length)+card('Runtimes',Object.keys(K.runtimes||{}).length)+card('MCP Tools',(K.mcp_tools||[]).length)+'</div>';
+ $('orgBox').textContent=JSON.stringify(K.organization,null,2);
+ $('schedulerBox').textContent=JSON.stringify(K.scheduler,null,2);
+ $('memoryBox').textContent=JSON.stringify(K.memory,null,2);
+ $('mcpBox').textContent=JSON.stringify(K.mcp_tools,null,2);
+ $('rawBox').textContent=JSON.stringify(K,null,2);
 }
-async function loadKernel2(){let d=await api('/api/kernel2/status');renderKernel2(d);}
-async function runKernelWorkflow(){
+async function runWorkflow(){
  let d=await api('/api/kernel2/workflow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({workflow_id:'project-acquisition',source:'ui'})});
- let status=await api('/api/kernel2/status');
- renderKernel2(status);
- document.getElementById('kernel2Box').innerHTML += '<div class="card"><h3>Last Workflow Run</h3><pre>'+JSON.stringify(d,null,2)+'</pre></div>';
- refresh();
+ $('workflowBox').textContent=JSON.stringify(d,null,2);
+ await loadAll();
 }
-async function runSource(){let d=await api('/api/sources/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source_id:1})});alert(JSON.stringify(d));loadProjects();refresh();}
-async function loadProjects(){let d=await api('/api/projects');$('projects').innerHTML='<table><tr><th>ID</th><th>Score</th><th>العنوان</th><th>الميزانية</th><th>الحالة</th></tr>'+d.map(x=>`<tr><td>${x.id}</td><td>${x.fit_score}</td><td>${x.title}<br><span class="pill">${x.platform}</span></td><td>${x.budget||''}</td><td>${x.status}</td></tr>`).join('')+'</table>'}
-async function analyze(){let d=await api('/api/projects/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project_id:Number($('pid').value)})});$('decisionOut').textContent=JSON.stringify(d,null,2);refresh();}
-async function proposal(){let d=await api('/api/projects/proposal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project_id:Number($('pid').value)})});$('decisionOut').textContent=JSON.stringify(d,null,2);refresh();}
-async function loadApprovals(){let d=await api('/api/approvals');$('approvals').innerHTML='<table><tr><th>ID</th><th>المشروع</th><th>الحالة</th><th>Proposal</th></tr>'+d.map(x=>`<tr><td>${x.id}</td><td>${x.project_title||''}</td><td>${x.status}</td><td>${(x.body||'').slice(0,500)}</td></tr>`).join('')+'</table>'}
-async function loadMcp(){let d=await api('/api/mcp');$('mcpBox').innerHTML='<h3>Tools</h3><table><tr><th>key</th><th>title</th></tr>'+d.tools.map(x=>`<tr><td>${x.key}</td><td>${x.title}</td></tr>`).join('')+'</table><h3>Executions</h3><pre>'+JSON.stringify(d.executions.slice(0,5),null,2)+'</pre>'}
-async function runMcpCompile(){let d=await api('/api/mcp/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tool_key:'compile_dna',params:{}})});alert(JSON.stringify(d));loadMcp();refresh();}
-async function compileDna(){let d=await api('/api/dna/compile',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});$('dnaOut').textContent=JSON.stringify(d,null,2);refresh();}
-async function ask(){let q=$('chatInput').value.trim();if(!q)return;$('chatInput').value='';$('chatMsgs').innerHTML+=`<div class="msg user">${q}</div>`;let d=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q})});$('chatMsgs').innerHTML+=`<div class="msg ai">${d.response}</div>`;$('chatMsgs').scrollTop=$('chatMsgs').scrollHeight;refresh();}
-refresh();loadSources();loadProjects();loadApprovals();loadMcp();loadKernel2();
+loadAll();
 </script>
 </body>
 </html>
