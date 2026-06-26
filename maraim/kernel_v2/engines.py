@@ -58,6 +58,7 @@ class PlannerEngine:
             "depends_on": [],
             "payload": payload,
             "priority": 0,
+            "status": "queued",
         }]
 
         for index, edge in enumerate(self.kernel.graph.outgoing(object_id), start=1):
@@ -70,6 +71,7 @@ class PlannerEngine:
                 "depends_on": [tasks[0]["id"]],
                 "payload": {"parent": object_id, "relation": edge.relation, "payload": payload},
                 "priority": index,
+                "status": "queued",
             })
 
         plan = {
@@ -86,11 +88,70 @@ class PlannerEngine:
         return {"plans": len(self.plans), "last": self.plans[-1] if self.plans else None}
 
 
-class ExecutionEngine:
-    """Task-graph execution foundation.
+class SchedulerEngine:
+    """Schedules task graphs and supports run-next/run-all execution."""
 
-    Executes a PlannerEngine task graph without the Kernel knowing concrete
-    runtime kinds such as Mission, Agent, Model, or Swarm.
+    def __init__(self, kernel: "KernelV2"):
+        self.kernel = kernel
+        self.queue: List[Dict[str, Any]] = []
+        self.completed: Dict[str, Dict[str, Any]] = {}
+        self.failed: List[Dict[str, Any]] = []
+
+    def schedule_plan(self, plan: Dict[str, Any]) -> Dict[str, Any]:
+        if not plan.get("ok"):
+            return plan
+        scheduled = []
+        for task in sorted(plan.get("tasks", []), key=lambda item: item.get("priority", 0)):
+            queued_task = dict(task)
+            queued_task["status"] = "queued"
+            self.queue.append(queued_task)
+            scheduled.append(queued_task["id"])
+        self.kernel.emit("scheduler.plan_scheduled", {"root": plan.get("root"), "tasks": len(scheduled)})
+        return {"ok": True, "scheduled": scheduled, "queued": len(self.queue)}
+
+    def runnable_tasks(self) -> List[Dict[str, Any]]:
+        return [
+            task for task in self.queue
+            if all(dep in self.completed for dep in task.get("depends_on", []))
+        ]
+
+    def run_next(self) -> Dict[str, Any]:
+        runnable = self.runnable_tasks()
+        if not runnable:
+            return {"ok": False, "error": "queue_empty_or_blocked", "status": self.status()}
+        task = sorted(runnable, key=lambda item: item.get("priority", 0))[0]
+        self.queue.remove(task)
+        result = self.kernel.execution.execute_task(task)
+        if result.get("ok"):
+            self.completed[task["id"]] = result
+        else:
+            self.failed.append(result)
+        return {"ok": True, "task_id": task["id"], "result": result, "status": self.status()}
+
+    def run_all(self, limit: int = 1000) -> Dict[str, Any]:
+        results = []
+        for _ in range(limit):
+            if not self.queue:
+                break
+            r = self.run_next()
+            if not r.get("ok"):
+                break
+            results.append(r)
+        return {"ok": True, "processed": len(results), "results": results, "status": self.status()}
+
+    def status(self) -> Dict[str, Any]:
+        return {
+            "queued": len(self.queue),
+            "completed": len(self.completed),
+            "failed": len(self.failed),
+        }
+
+
+class ExecutionEngine:
+    """Task execution foundation.
+
+    Executes Scheduler/Planner tasks without the Kernel knowing concrete runtime
+    kinds such as Mission, Agent, Model, or Swarm.
     """
 
     def __init__(self, kernel: "KernelV2"):
@@ -101,44 +162,28 @@ class ExecutionEngine:
         plan = self.kernel.planner.plan(object_id, payload)
         if not plan.get("ok"):
             return plan
-        return self.execute_plan(plan)
+        self.kernel.scheduler.schedule_plan(plan)
+        return self.kernel.scheduler.run_all()
 
     def execute_plan(self, plan: Dict[str, Any]) -> Dict[str, Any]:
-        completed: Dict[str, Dict[str, Any]] = {}
-        failed: List[Dict[str, Any]] = []
+        self.kernel.scheduler.schedule_plan(plan)
+        return self.kernel.scheduler.run_all()
 
-        for task in sorted(plan.get("tasks", []), key=lambda item: item.get("priority", 0)):
-            missing = [dep for dep in task.get("depends_on", []) if dep not in completed]
-            if missing:
-                failure = {"ok": False, "task": task, "error": "missing_dependencies", "missing": missing}
-                failed.append(failure)
-                continue
-
-            obj = self.kernel.graph.get(task["object_id"])
-            if obj is None:
-                failure = {"ok": False, "task": task, "error": "runtime_not_found"}
-                failed.append(failure)
-                continue
-
-            result = {
-                "ok": True,
-                "task": task,
-                "object": obj.status(),
-                "result": obj.execute(task.get("payload", {})),
-            }
-            completed[task["id"]] = result
-
-        run = {
-            "ok": len(failed) == 0,
-            "plan": plan,
-            "completed": list(completed.values()),
-            "failed": failed,
-            "completed_count": len(completed),
-            "failed_count": len(failed),
+    def execute_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        obj = self.kernel.graph.get(task["object_id"])
+        if obj is None:
+            result = {"ok": False, "task": task, "error": "runtime_not_found"}
+            self.runs.append(result)
+            return result
+        result = {
+            "ok": True,
+            "task": task,
+            "object": obj.status(),
+            "result": obj.execute(task.get("payload", {})),
         }
-        self.runs.append(run)
-        self.kernel.emit("execution.completed", {"root": plan.get("root"), "completed": len(completed), "failed": len(failed)})
-        return run
+        self.runs.append(result)
+        self.kernel.emit("execution.task_completed", {"task_id": task.get("id"), "object_id": task.get("object_id")})
+        return result
 
     def status(self) -> Dict[str, Any]:
         return {"runs": len(self.runs), "last": self.runs[-1] if self.runs else None}
@@ -165,6 +210,7 @@ class KernelV2:
         self.objects = ObjectEngine(self.graph)
         self.resources = ResourceEngine(self.graph)
         self.planner = PlannerEngine(self)
+        self.scheduler = SchedulerEngine(self)
         self.execution = ExecutionEngine(self)
         self.diagnostics = DiagnosticsEngine(self)
         self.events: List[Dict[str, Any]] = []
@@ -190,6 +236,7 @@ class KernelV2:
             "dna": self.dna.status(),
             "graph": self.graph.status(),
             "planner": self.planner.status(),
+            "scheduler": self.scheduler.status(),
             "execution": self.execution.status(),
             "events": len(self.events),
             "engines": [
