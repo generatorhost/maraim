@@ -4,9 +4,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from maraim.kernel_v2 import KernelV2, RuntimeLifecycleManager, RuntimeResourceManager
+from maraim.kernel_v2 import (
+    KernelV2,
+    RuntimeLifecycleManager,
+    RuntimeObjectManager,
+    RuntimeResourceManager,
+)
 
 MISSION_ID = "missions.sample.research_mission@1.0.0"
+AGENT_ID = "agents.sample.research_agent@1.0.0"
 
 kernel = KernelV2(dna_root="dna")
 status = kernel.boot()
@@ -39,6 +45,15 @@ resource_allocate = resources.allocate(MISSION_ID, {"cpu_units": 2, "ram_mb": 25
 resource_rebalance = resources.rebalance()
 resource_release = resources.release(MISSION_ID)
 resource_status = resources.status()
+objects = RuntimeObjectManager(kernel)
+object_snapshot = objects.snapshot(AGENT_ID, label="before_update")
+object_update = objects.update(AGENT_ID, metadata={"smoke": "updated"}, capabilities=["research", "task_execution", "smoke_capability"])
+object_restore = objects.restore(AGENT_ID)
+object_clone = objects.clone(AGENT_ID, new_key="research_agent_clone")
+clone_id = object_clone.get("clone", {}).get("id")
+object_archive = objects.archive(clone_id) if clone_id else {"ok": False}
+object_delete = objects.delete(clone_id) if clone_id else {"ok": False}
+object_status = objects.status()
 
 print("MARAIM_KERNEL_V2_SMOKE_OK")
 print(status["state"])
@@ -71,6 +86,13 @@ print(resource_allocate)
 print(resource_rebalance)
 print(resource_release)
 print(resource_status)
+print(object_snapshot)
+print(object_update)
+print(object_restore)
+print(object_clone)
+print(object_archive)
+print(object_delete)
+print(object_status)
 
 assert status["state"] == "running"
 assert status["graph"]["nodes"] >= 4
@@ -120,3 +142,12 @@ assert resource_rebalance["ok"] is True
 assert resource_release["ok"] is True
 assert resource_status["allocations"] == 0
 assert resource_status["history"] >= 3
+assert object_snapshot["ok"] is True
+assert object_update["ok"] is True
+assert object_restore["ok"] is True
+assert object_clone["ok"] is True
+assert object_archive["ok"] is True
+assert object_delete["ok"] is True
+assert object_status["snapshots"] >= 1
+assert object_status["archived"] >= 1
+assert object_status["history"] >= 6
