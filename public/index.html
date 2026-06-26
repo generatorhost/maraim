@@ -33,7 +33,7 @@ pre{white-space:pre-wrap;background:#0b0e18;border:1px solid var(--line);border-
  <div class="page active" id="dashboard"><h1>Dashboard</h1><button onclick="loadAll()">?????</button><div id="dash" class="grid"></div></div>
  <div class="page" id="kernel"><h1>Kernel</h1><div id="kernelBox"></div></div>
  <div class="page" id="org"><h1>Chief / Teams / Agents</h1><pre id="orgBox"></pre></div>
- <div class="page" id="scheduler"><h1>Scheduler</h1><pre id="schedulerBox"></pre></div>
+ <div class="page" id="scheduler"><h1>Scheduler</h1><button onclick="runNextTask()">Run Next Task</button><pre id="schedulerBox"></pre><pre id="lastTaskBox"></pre></div>
  <div class="page" id="memory"><h1>Memory</h1><pre id="memoryBox"></pre></div>
  <div class="page" id="workflow"><h1>Workflows</h1><button onclick="runWorkflow()">????? Project Acquisition</button><pre id="workflowBox"></pre></div>
  <div class="page" id="mcp"><h1>MCP</h1><pre id="mcpBox"></pre></div>
@@ -55,6 +55,11 @@ async function loadAll(){
  $('memoryBox').textContent=JSON.stringify(K.memory,null,2);
  $('mcpBox').textContent=JSON.stringify(K.mcp_tools,null,2);
  $('rawBox').textContent=JSON.stringify(K,null,2);
+}
+async function runNextTask(){
+ let d=await api('/api/kernel2/run-next',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+ $('lastTaskBox').textContent=JSON.stringify(d,null,2);
+ await loadAll();
 }
 async function runWorkflow(){
  let d=await api('/api/kernel2/workflow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({workflow_id:'project-acquisition',source:'ui'})});
