@@ -19,6 +19,7 @@ plan = kernel.planner.plan(MISSION_ID, {"topic": "kernel v2 smoke"})
 scheduled = kernel.scheduler.schedule_plan(plan)
 run_next = kernel.scheduler.run_next()
 run_all = kernel.scheduler.run_all()
+evolution_status = kernel.evolution.status()
 
 print("MARAIM_KERNEL_V2_SMOKE_OK")
 print(status["state"])
@@ -33,6 +34,7 @@ print(plan)
 print(scheduled)
 print(run_next)
 print(run_all)
+print(evolution_status)
 
 assert status["state"] == "running"
 assert status["graph"]["nodes"] >= 4
@@ -50,3 +52,6 @@ assert run_all["ok"] is True
 assert run_all["status"]["queued"] == 0
 assert run_all["status"]["completed"] >= 4
 assert run_all["status"]["failed"] == 0
+assert evolution_status["experiences"] >= 1
+assert evolution_status["lessons"] >= 1
+assert evolution_status["last_lesson"]["recommendation"] == "reuse_current_task_graph"
