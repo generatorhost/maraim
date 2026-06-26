@@ -66,7 +66,13 @@ function renderKernel2(d){
   '<div class="card"><h3>MCP Tools</h3><pre>'+JSON.stringify(d.mcp_tools||[],null,2)+'</pre></div>';
 }
 async function loadKernel2(){let d=await api('/api/kernel2/status');renderKernel2(d);}
-async function runKernelWorkflow(){let d=await api('/api/kernel2/workflow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({workflow_id:'project-acquisition',source:'ui'})});document.getElementById('kernel2Box').textContent=JSON.stringify(d,null,2);refresh();}
+async function runKernelWorkflow(){
+ let d=await api('/api/kernel2/workflow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({workflow_id:'project-acquisition',source:'ui'})});
+ let status=await api('/api/kernel2/status');
+ renderKernel2(status);
+ document.getElementById('kernel2Box').innerHTML += '<div class="card"><h3>Last Workflow Run</h3><pre>'+JSON.stringify(d,null,2)+'</pre></div>';
+ refresh();
+}
 async function runSource(){let d=await api('/api/sources/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source_id:1})});alert(JSON.stringify(d));loadProjects();refresh();}
 async function loadProjects(){let d=await api('/api/projects');$('projects').innerHTML='<table><tr><th>ID</th><th>Score</th><th>العنوان</th><th>الميزانية</th><th>الحالة</th></tr>'+d.map(x=>`<tr><td>${x.id}</td><td>${x.fit_score}</td><td>${x.title}<br><span class="pill">${x.platform}</span></td><td>${x.budget||''}</td><td>${x.status}</td></tr>`).join('')+'</table>'}
 async function analyze(){let d=await api('/api/projects/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project_id:Number($('pid').value)})});$('decisionOut').textContent=JSON.stringify(d,null,2);refresh();}
