@@ -5,6 +5,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from maraim.kernel_v2 import (
+    DNAExtractorEngine,
     KernelV2,
     RuntimeLifecycleManager,
     RuntimeObjectManager,
@@ -54,6 +55,22 @@ clone_id = object_clone.get("clone", {}).get("id")
 object_archive = objects.archive(clone_id) if clone_id else {"ok": False}
 object_delete = objects.delete(clone_id) if clone_id else {"ok": False}
 object_status = objects.status()
+extractor = DNAExtractorEngine(kernel)
+extracted = extractor.extract_from_tree(
+    "sample_project",
+    [
+        "agents/research_agent.py",
+        "workflows/research_workflow.py",
+        "tools/browser_tool.py",
+        "models/sample.gguf",
+        "knowledge/guide.md",
+        "package.json",
+        "docker-compose.yml",
+        "assets/logo.png",
+    ],
+    metadata={"source": "smoke"},
+)
+extractor_status = extractor.status()
 
 print("MARAIM_KERNEL_V2_SMOKE_OK")
 print(status["state"])
@@ -93,6 +110,8 @@ print(object_clone)
 print(object_archive)
 print(object_delete)
 print(object_status)
+print(extracted)
+print(extractor_status)
 
 assert status["state"] == "running"
 assert status["graph"]["nodes"] >= 4
@@ -151,3 +170,10 @@ assert object_delete["ok"] is True
 assert object_status["snapshots"] >= 1
 assert object_status["archived"] >= 1
 assert object_status["history"] >= 6
+assert extracted["ok"] is True
+assert extracted["inventory"]["files"] == 8
+assert extracted["runtime_objects"]
+assert any(obj["kind"] == "model" for obj in extracted["runtime_objects"])
+assert any(obj["kind"] == "agent" for obj in extracted["runtime_objects"])
+assert extracted["export_name"].endswith(".mdp")
+assert extractor_status["extractions"] >= 1
