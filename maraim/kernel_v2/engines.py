@@ -27,12 +27,8 @@ class ResourceEngine:
         return {"ok": True, "capability": capability, "runtime": matches[0].status(), "candidates": [m.id for m in matches]}
 
 
-class ExecutionEngine:
-    """Graph-based execution foundation.
-
-    Executes a RuntimeObject and its outgoing graph relations without the
-    Kernel knowing concrete types such as Mission, Agent, Model, or Swarm.
-    """
+class PlannerEngine:
+    """Builds an executable task graph from RuntimeGraph relations."""
 
     EXECUTABLE_RELATIONS = {
         "uses_agent",
@@ -47,40 +43,102 @@ class ExecutionEngine:
 
     def __init__(self, kernel: "KernelV2"):
         self.kernel = kernel
-        self.runs: List[Dict[str, Any]] = []
+        self.plans: List[Dict[str, Any]] = []
 
-    def execute(self, object_id: str, payload: Optional[Dict[str, Any]] = None, depth: int = 1) -> Dict[str, Any]:
+    def plan(self, object_id: str, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         payload = payload or {}
         obj = self.kernel.graph.get(object_id)
         if obj is None:
             return {"ok": False, "error": "runtime_not_found", "object_id": object_id}
 
-        result = {
+        tasks = [{
+            "id": f"task:root:{object_id}",
+            "object_id": object_id,
+            "relation": "root",
+            "depends_on": [],
+            "payload": payload,
+            "priority": 0,
+        }]
+
+        for index, edge in enumerate(self.kernel.graph.outgoing(object_id), start=1):
+            if edge.relation not in self.EXECUTABLE_RELATIONS:
+                continue
+            tasks.append({
+                "id": f"task:{index}:{edge.target}",
+                "object_id": edge.target,
+                "relation": edge.relation,
+                "depends_on": [tasks[0]["id"]],
+                "payload": {"parent": object_id, "relation": edge.relation, "payload": payload},
+                "priority": index,
+            })
+
+        plan = {
             "ok": True,
-            "object": obj.status(),
-            "result": obj.execute(payload),
-            "children": [],
+            "root": object_id,
+            "task_count": len(tasks),
+            "tasks": tasks,
         }
+        self.plans.append(plan)
+        self.kernel.emit("planner.plan_created", {"object_id": object_id, "tasks": len(tasks)})
+        return plan
 
-        if depth > 0:
-            for edge in self.kernel.graph.outgoing(object_id):
-                if edge.relation not in self.EXECUTABLE_RELATIONS:
-                    continue
-                child = self.kernel.graph.get(edge.target)
-                if child is None:
-                    result["children"].append({"ok": False, "edge": edge.__dict__, "error": "target_not_found"})
-                    continue
-                child_payload = {"parent": object_id, "relation": edge.relation, "payload": payload}
-                result["children"].append({
-                    "ok": True,
-                    "relation": edge.relation,
-                    "target": child.status(),
-                    "result": child.execute(child_payload),
-                })
+    def status(self) -> Dict[str, Any]:
+        return {"plans": len(self.plans), "last": self.plans[-1] if self.plans else None}
 
-        self.runs.append(result)
-        self.kernel.emit("execution.completed", {"object_id": object_id, "children": len(result["children"])})
-        return result
+
+class ExecutionEngine:
+    """Task-graph execution foundation.
+
+    Executes a PlannerEngine task graph without the Kernel knowing concrete
+    runtime kinds such as Mission, Agent, Model, or Swarm.
+    """
+
+    def __init__(self, kernel: "KernelV2"):
+        self.kernel = kernel
+        self.runs: List[Dict[str, Any]] = []
+
+    def execute(self, object_id: str, payload: Optional[Dict[str, Any]] = None, depth: int = 1) -> Dict[str, Any]:
+        plan = self.kernel.planner.plan(object_id, payload)
+        if not plan.get("ok"):
+            return plan
+        return self.execute_plan(plan)
+
+    def execute_plan(self, plan: Dict[str, Any]) -> Dict[str, Any]:
+        completed: Dict[str, Dict[str, Any]] = {}
+        failed: List[Dict[str, Any]] = []
+
+        for task in sorted(plan.get("tasks", []), key=lambda item: item.get("priority", 0)):
+            missing = [dep for dep in task.get("depends_on", []) if dep not in completed]
+            if missing:
+                failure = {"ok": False, "task": task, "error": "missing_dependencies", "missing": missing}
+                failed.append(failure)
+                continue
+
+            obj = self.kernel.graph.get(task["object_id"])
+            if obj is None:
+                failure = {"ok": False, "task": task, "error": "runtime_not_found"}
+                failed.append(failure)
+                continue
+
+            result = {
+                "ok": True,
+                "task": task,
+                "object": obj.status(),
+                "result": obj.execute(task.get("payload", {})),
+            }
+            completed[task["id"]] = result
+
+        run = {
+            "ok": len(failed) == 0,
+            "plan": plan,
+            "completed": list(completed.values()),
+            "failed": failed,
+            "completed_count": len(completed),
+            "failed_count": len(failed),
+        }
+        self.runs.append(run)
+        self.kernel.emit("execution.completed", {"root": plan.get("root"), "completed": len(completed), "failed": len(failed)})
+        return run
 
     def status(self) -> Dict[str, Any]:
         return {"runs": len(self.runs), "last": self.runs[-1] if self.runs else None}
@@ -106,6 +164,7 @@ class KernelV2:
         self.dna = DNAManager(dna_root)
         self.objects = ObjectEngine(self.graph)
         self.resources = ResourceEngine(self.graph)
+        self.planner = PlannerEngine(self)
         self.execution = ExecutionEngine(self)
         self.diagnostics = DiagnosticsEngine(self)
         self.events: List[Dict[str, Any]] = []
@@ -130,6 +189,7 @@ class KernelV2:
             "state": self.state,
             "dna": self.dna.status(),
             "graph": self.graph.status(),
+            "planner": self.planner.status(),
             "execution": self.execution.status(),
             "events": len(self.events),
             "engines": [
