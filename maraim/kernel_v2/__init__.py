@@ -3,6 +3,7 @@ from .runtime_graph import RuntimeGraph
 from .dna_manager import DNAManager
 from .engines import KernelV2
 from .lifecycle import RuntimeLifecycleManager
+from .resource_manager import RuntimeResourceManager
 from .runtime_types import (
     CommanderRuntime,
     MissionRuntime,
