@@ -1,3 +1,4 @@
+import time
 from typing import Any, Dict, List, Optional
 
 from .dna_manager import DNAManager
@@ -130,6 +131,7 @@ class SchedulerEngine:
 
     def run_all(self, limit: int = 1000) -> Dict[str, Any]:
         results = []
+        started = time.time()
         for _ in range(limit):
             if not self.queue:
                 break
@@ -137,13 +139,70 @@ class SchedulerEngine:
             if not r.get("ok"):
                 break
             results.append(r)
-        return {"ok": True, "processed": len(results), "results": results, "status": self.status()}
+        run = {"ok": True, "processed": len(results), "results": results, "status": self.status(), "duration_ms": int((time.time() - started) * 1000)}
+        self.kernel.evolution.observe_run(run)
+        return run
 
     def status(self) -> Dict[str, Any]:
         return {
             "queued": len(self.queue),
             "completed": len(self.completed),
             "failed": len(self.failed),
+        }
+
+
+class EvolutionEngine:
+    """Records execution experience and produces optimization lessons.
+
+    This foundation does not mutate DNA yet. It creates the telemetry and
+    lessons layer that future DNA evolution will consume.
+    """
+
+    def __init__(self, kernel: "KernelV2"):
+        self.kernel = kernel
+        self.experiences: List[Dict[str, Any]] = []
+        self.lessons: List[Dict[str, Any]] = []
+
+    def observe_run(self, run: Dict[str, Any]) -> Dict[str, Any]:
+        experience = {
+            "id": f"experience:{len(self.experiences) + 1}",
+            "timestamp": time.time(),
+            "processed": run.get("processed", 0),
+            "queued": run.get("status", {}).get("queued", 0),
+            "completed": run.get("status", {}).get("completed", 0),
+            "failed": run.get("status", {}).get("failed", 0),
+            "duration_ms": run.get("duration_ms", 0),
+            "success": run.get("status", {}).get("failed", 0) == 0,
+            "relations": [item.get("result", {}).get("task", {}).get("relation") for item in run.get("results", [])],
+        }
+        self.experiences.append(experience)
+        lesson = self._lesson_from_experience(experience)
+        self.lessons.append(lesson)
+        self.kernel.emit("evolution.experience_recorded", {"experience_id": experience["id"], "success": experience["success"]})
+        return {"ok": True, "experience": experience, "lesson": lesson}
+
+    def _lesson_from_experience(self, experience: Dict[str, Any]) -> Dict[str, Any]:
+        if experience["success"]:
+            recommendation = "reuse_current_task_graph"
+        else:
+            recommendation = "inspect_failed_runtime_objects"
+        return {
+            "id": f"lesson:{len(self.lessons) + 1}",
+            "experience_id": experience["id"],
+            "recommendation": recommendation,
+            "reason": {
+                "processed": experience["processed"],
+                "failed": experience["failed"],
+                "duration_ms": experience["duration_ms"],
+            },
+        }
+
+    def status(self) -> Dict[str, Any]:
+        return {
+            "experiences": len(self.experiences),
+            "lessons": len(self.lessons),
+            "last_experience": self.experiences[-1] if self.experiences else None,
+            "last_lesson": self.lessons[-1] if self.lessons else None,
         }
 
 
@@ -170,9 +229,10 @@ class ExecutionEngine:
         return self.kernel.scheduler.run_all()
 
     def execute_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        started = time.time()
         obj = self.kernel.graph.get(task["object_id"])
         if obj is None:
-            result = {"ok": False, "task": task, "error": "runtime_not_found"}
+            result = {"ok": False, "task": task, "error": "runtime_not_found", "duration_ms": int((time.time() - started) * 1000)}
             self.runs.append(result)
             return result
         result = {
@@ -180,6 +240,7 @@ class ExecutionEngine:
             "task": task,
             "object": obj.status(),
             "result": obj.execute(task.get("payload", {})),
+            "duration_ms": int((time.time() - started) * 1000),
         }
         self.runs.append(result)
         self.kernel.emit("execution.task_completed", {"task_id": task.get("id"), "object_id": task.get("object_id")})
@@ -210,6 +271,7 @@ class KernelV2:
         self.objects = ObjectEngine(self.graph)
         self.resources = ResourceEngine(self.graph)
         self.planner = PlannerEngine(self)
+        self.evolution = EvolutionEngine(self)
         self.scheduler = SchedulerEngine(self)
         self.execution = ExecutionEngine(self)
         self.diagnostics = DiagnosticsEngine(self)
@@ -238,6 +300,7 @@ class KernelV2:
             "planner": self.planner.status(),
             "scheduler": self.scheduler.status(),
             "execution": self.execution.status(),
+            "evolution": self.evolution.status(),
             "events": len(self.events),
             "engines": [
                 "object",
