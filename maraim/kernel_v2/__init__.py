@@ -4,6 +4,7 @@ from .dna_manager import DNAManager
 from .engines import KernelV2
 from .lifecycle import RuntimeLifecycleManager
 from .resource_manager import RuntimeResourceManager
+from .object_manager import RuntimeObjectManager
 from .runtime_types import (
     CommanderRuntime,
     MissionRuntime,
