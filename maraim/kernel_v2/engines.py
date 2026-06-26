@@ -1,9 +1,54 @@
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from .dna_manager import DNAManager
 from .runtime_graph import RuntimeGraph
 from .runtime_object import RuntimeObject
+
+
+class EventBusEngine:
+    """In-kernel event bus foundation.
+
+    Engines and RuntimeObjects emit events without hard-coding downstream
+    consumers. Subscribers can listen to exact event types or to '*'.
+    """
+
+    def __init__(self):
+        self.events: List[Dict[str, Any]] = []
+        self.subscribers: Dict[str, List[Callable[[Dict[str, Any]], Any]]] = {}
+        self.deliveries: List[Dict[str, Any]] = []
+        self.errors: List[Dict[str, Any]] = []
+
+    def subscribe(self, event_type: str, handler: Callable[[Dict[str, Any]], Any]) -> Dict[str, Any]:
+        self.subscribers.setdefault(event_type, []).append(handler)
+        return {"ok": True, "event_type": event_type, "subscribers": len(self.subscribers[event_type])}
+
+    def emit(self, event_type: str, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        event = {
+            "id": f"event:{len(self.events) + 1}",
+            "type": event_type,
+            "payload": payload or {},
+            "timestamp": time.time(),
+        }
+        self.events.append(event)
+        handlers = list(self.subscribers.get(event_type, [])) + list(self.subscribers.get("*", []))
+        for handler in handlers:
+            try:
+                result = handler(event)
+                self.deliveries.append({"event_id": event["id"], "event_type": event_type, "ok": True, "result": result})
+            except Exception as exc:  # pragma: no cover - defensive event isolation
+                self.errors.append({"event_id": event["id"], "event_type": event_type, "ok": False, "error": str(exc)})
+        return event
+
+    def status(self) -> Dict[str, Any]:
+        return {
+            "events": len(self.events),
+            "subscribers": sum(len(v) for v in self.subscribers.values()),
+            "event_types": sorted(self.subscribers.keys()),
+            "deliveries": len(self.deliveries),
+            "errors": len(self.errors),
+            "last_event": self.events[-1] if self.events else None,
+        }
 
 
 class ObjectEngine:
@@ -193,6 +238,7 @@ class SchedulerEngine:
                 break
             results.append(r)
         run = {"ok": True, "processed": len(results), "results": results, "status": self.status(), "duration_ms": int((time.time() - started) * 1000)}
+        self.kernel.emit("scheduler.run_completed", run)
         self.kernel.evolution.observe_run(run)
         return run
 
@@ -233,6 +279,7 @@ class EvolutionEngine:
         self.lessons.append(lesson)
         self.kernel.memory.remember_experience(experience, lesson)
         self.kernel.emit("evolution.experience_recorded", {"experience_id": experience["id"], "success": experience["success"]})
+        self.kernel.emit("evolution.lesson_created", {"lesson_id": lesson["id"], "recommendation": lesson["recommendation"]})
         return {"ok": True, "experience": experience, "lesson": lesson}
 
     def _lesson_from_experience(self, experience: Dict[str, Any]) -> Dict[str, Any]:
@@ -288,6 +335,7 @@ class ExecutionEngine:
         if obj is None:
             result = {"ok": False, "task": task, "error": "runtime_not_found", "duration_ms": int((time.time() - started) * 1000)}
             self.runs.append(result)
+            self.kernel.emit("execution.task_failed", {"task_id": task.get("id"), "object_id": task.get("object_id"), "error": "runtime_not_found"})
             return result
         result = {
             "ok": True,
@@ -320,6 +368,7 @@ class KernelV2:
     """
 
     def __init__(self, dna_root: str = "dna"):
+        self.event_bus = EventBusEngine()
         self.graph = RuntimeGraph()
         self.dna = DNAManager(dna_root)
         self.objects = ObjectEngine(self.graph)
@@ -332,6 +381,12 @@ class KernelV2:
         self.diagnostics = DiagnosticsEngine(self)
         self.events: List[Dict[str, Any]] = []
         self.state = "created"
+        self._wire_default_event_handlers()
+
+    def _wire_default_event_handlers(self) -> None:
+        self.event_bus.subscribe("execution.task_completed", lambda event: self.memory.remember("working", {"type": "event", "data": event}))
+        self.event_bus.subscribe("scheduler.plan_scheduled", lambda event: self.memory.remember("collective", {"type": "event", "data": event}))
+        self.event_bus.subscribe("evolution.lesson_created", lambda event: self.memory.remember("semantic", {"type": "event", "data": event}))
 
     def boot(self) -> Dict[str, Any]:
         self.state = "booting"
@@ -343,7 +398,7 @@ class KernelV2:
         return self.status()
 
     def emit(self, event_type: str, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        event = {"type": event_type, "payload": payload or {}}
+        event = self.event_bus.emit(event_type, payload or {})
         self.events.append(event)
         return event
 
@@ -352,6 +407,7 @@ class KernelV2:
             "state": self.state,
             "dna": self.dna.status(),
             "graph": self.graph.status(),
+            "event_bus": self.event_bus.status(),
             "memory": self.memory.status(),
             "planner": self.planner.status(),
             "scheduler": self.scheduler.status(),
@@ -364,6 +420,7 @@ class KernelV2:
                 "lifecycle",
                 "runtime_graph",
                 "discovery",
+                "event_bus",
                 "scheduler",
                 "planner",
                 "execution",
