@@ -81,6 +81,16 @@ class MaraimKernel:
     def run_workflow(self, workflow_id, payload=None):
         return self.workflow_runtime.run(workflow_id, payload or {})
 
+    def run_next_task(self):
+        item = self.scheduler_runtime.next()
+        if not item:
+            return {"ok": False, "error": "queue_empty"}
+        task = item["task"]
+        routed = self.organization_runtime.route_task(task)
+        self.memory_runtime.remember_long({"executed_task": task, "routed": routed})
+        self.scheduler_runtime.complete(item["id"], routed)
+        return {"ok": True, "task_id": item["id"], "task": task, "routed": routed}
+
     def status(self):
         return {
             "state": self.state.value,
@@ -106,3 +116,4 @@ class MaraimKernel:
         self.mcp_runtime.register_tool("workflow.run", lambda payload: self.run_workflow(payload.get("workflow_id", "project-acquisition"), payload), "Run workflow through Scheduler")
         self.mcp_runtime.register_tool("memory.status", lambda _: self.memory_runtime.status(), "Return memory status")
         self.mcp_runtime.register_tool("scheduler.status", lambda _: self.scheduler_runtime.status(), "Return scheduler status")
+        self.mcp_runtime.register_tool("scheduler.run_next", lambda _: self.run_next_task(), "Run next queued task")

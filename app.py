@@ -9,7 +9,7 @@ from maraim.scraping.sprint2b_runtime import ensure_sprint2b, scraping_runtime_s
 from maraim.runtime.freelance import analyze_project, generate_proposal
 from maraim.mcp.tools import run_tool
 from maraim.ai.ollama_router import generate
-from maraim.kernel2.app_bridge import kernel_status, route_task, run_workflow
+from maraim.kernel2.app_bridge import kernel_status, route_task, run_workflow, run_mcp_tool
 
 DB_PATH = "data/maraim.sqlite"
 db = init_db(DB_PATH)
@@ -96,6 +96,8 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_json(route_task(body)); return
         if path == "/api/kernel2/workflow":
             self.send_json(run_workflow(body.get("workflow_id", "project-acquisition"), body)); return
+        if path == "/api/kernel2/run-next":
+            self.send_json(run_mcp_tool("scheduler.run_next", {})); return
 
         if path == "/api/dna/compile":
             self.send_json(compile_dna(db, Path("dna/source"))); return
