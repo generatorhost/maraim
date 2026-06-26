@@ -12,18 +12,23 @@ text_generation = kernel.resources.resolve_capability("text_generation")
 research = kernel.resources.resolve_capability("research")
 mission = kernel.resources.resolve_capability("mission_planning")
 swarm = kernel.resources.resolve_capability("swarm_spawn")
+mission_edges = kernel.graph.outgoing("missions.sample.research_mission@1.0.0")
 
 print("MARAIM_KERNEL_V2_SMOKE_OK")
 print(status["state"])
 print(status["graph"]["nodes"])
+print(status["graph"]["edges"])
 print(text_generation)
 print(research)
 print(mission)
 print(swarm)
+print([edge.__dict__ for edge in mission_edges])
 
 assert status["state"] == "running"
 assert status["graph"]["nodes"] >= 4
+assert status["graph"]["edges"] >= 3
 assert text_generation["ok"] is True
 assert research["ok"] is True
 assert mission["ok"] is True
 assert swarm["ok"] is True
+assert {edge.relation for edge in mission_edges} >= {"uses_agent", "uses_model", "uses_swarm"}
