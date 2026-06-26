@@ -11,6 +11,13 @@ class SampleMissionRuntime(MissionRuntime):
             metadata={"description": "Sample mission proving missions are RuntimeObjects."},
         )
 
+    def connect(self, kernel):
+        super().connect(kernel)
+        kernel.graph.connect(self.id, "uses_agent", "agents.sample.research_agent@1.0.0")
+        kernel.graph.connect(self.id, "uses_model", "models.local.sample_model@1.0.0")
+        kernel.graph.connect(self.id, "uses_swarm", "swarms.sample.research_swarm@1.0.0")
+        return self
+
     def execute(self, payload=None):
         payload = payload or {}
         return {
