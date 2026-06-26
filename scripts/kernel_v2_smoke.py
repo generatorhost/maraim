@@ -16,7 +16,9 @@ mission = kernel.resources.resolve_capability("mission_planning")
 swarm = kernel.resources.resolve_capability("swarm_spawn")
 mission_edges = kernel.graph.outgoing(MISSION_ID)
 plan = kernel.planner.plan(MISSION_ID, {"topic": "kernel v2 smoke"})
-execution = kernel.execution.execute_plan(plan)
+scheduled = kernel.scheduler.schedule_plan(plan)
+run_next = kernel.scheduler.run_next()
+run_all = kernel.scheduler.run_all()
 
 print("MARAIM_KERNEL_V2_SMOKE_OK")
 print(status["state"])
@@ -28,7 +30,9 @@ print(mission)
 print(swarm)
 print([edge.__dict__ for edge in mission_edges])
 print(plan)
-print(execution)
+print(scheduled)
+print(run_next)
+print(run_all)
 
 assert status["state"] == "running"
 assert status["graph"]["nodes"] >= 4
@@ -40,7 +44,9 @@ assert swarm["ok"] is True
 assert {edge.relation for edge in mission_edges} >= {"uses_agent", "uses_model", "uses_swarm"}
 assert plan["ok"] is True
 assert plan["task_count"] >= 4
-assert execution["ok"] is True
-assert execution["completed_count"] >= 4
-assert execution["failed_count"] == 0
-assert {item["task"]["relation"] for item in execution["completed"]} >= {"root", "uses_agent", "uses_model", "uses_swarm"}
+assert scheduled["ok"] is True
+assert run_next["ok"] is True
+assert run_all["ok"] is True
+assert run_all["status"]["queued"] == 0
+assert run_all["status"]["completed"] >= 4
+assert run_all["status"]["failed"] == 0
