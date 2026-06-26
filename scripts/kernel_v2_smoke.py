@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from maraim.kernel_v2 import KernelV2
+from maraim.kernel_v2 import KernelV2, RuntimeLifecycleManager
 
 MISSION_ID = "missions.sample.research_mission@1.0.0"
 
@@ -28,6 +28,12 @@ dna_memory = kernel.memory.recall("dna")
 working = kernel.memory.recall("working")
 semantic = kernel.memory.recall("semantic")
 collective = kernel.memory.recall("collective")
+lifecycle = RuntimeLifecycleManager(kernel)
+lifecycle_register = lifecycle.register_graph()
+lifecycle_busy = lifecycle.transition(MISSION_ID, "busy", reason="smoke_execution")
+lifecycle_heartbeat = lifecycle.heartbeat(MISSION_ID, latency_ms=1, load=1, queue=0)
+lifecycle_idle = lifecycle.transition(MISSION_ID, "idle", reason="smoke_completed")
+lifecycle_status = lifecycle.status()
 
 print("MARAIM_KERNEL_V2_SMOKE_OK")
 print(status["state"])
@@ -51,6 +57,11 @@ print(dna_memory)
 print(working)
 print(semantic)
 print(collective)
+print(lifecycle_register)
+print(lifecycle_busy)
+print(lifecycle_heartbeat)
+print(lifecycle_idle)
+print(lifecycle_status)
 
 assert status["state"] == "running"
 assert status["graph"]["nodes"] >= 4
@@ -87,3 +98,11 @@ assert dna_memory["ok"] is True
 assert working["ok"] is True
 assert semantic["ok"] is True
 assert collective["ok"] is True
+assert lifecycle_register["ok"] is True
+assert lifecycle_register["count"] >= 4
+assert lifecycle_busy["ok"] is True
+assert lifecycle_heartbeat["ok"] is True
+assert lifecycle_idle["ok"] is True
+assert lifecycle_status["runtimes"] >= 4
+assert lifecycle_status["healthy"] >= 4
+assert lifecycle_status["transitions"] >= 2
