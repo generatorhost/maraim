@@ -21,9 +21,13 @@ run_next = kernel.scheduler.run_next()
 run_all = kernel.scheduler.run_all()
 evolution_status = kernel.evolution.status()
 memory_status = kernel.memory.status()
+event_bus_status = kernel.event_bus.status()
 episodic = kernel.memory.recall("episodic")
 procedural = kernel.memory.recall("procedural")
 dna_memory = kernel.memory.recall("dna")
+working = kernel.memory.recall("working")
+semantic = kernel.memory.recall("semantic")
+collective = kernel.memory.recall("collective")
 
 print("MARAIM_KERNEL_V2_SMOKE_OK")
 print(status["state"])
@@ -40,9 +44,13 @@ print(run_next)
 print(run_all)
 print(evolution_status)
 print(memory_status)
+print(event_bus_status)
 print(episodic)
 print(procedural)
 print(dna_memory)
+print(working)
+print(semantic)
+print(collective)
 
 assert status["state"] == "running"
 assert status["graph"]["nodes"] >= 4
@@ -66,6 +74,16 @@ assert evolution_status["last_lesson"]["recommendation"] == "reuse_current_task_
 assert memory_status["episodic"] >= 1
 assert memory_status["procedural"] >= 1
 assert memory_status["dna"] >= 1
+assert memory_status["working"] >= 1
+assert memory_status["semantic"] >= 1
+assert memory_status["collective"] >= 1
+assert event_bus_status["events"] >= 1
+assert event_bus_status["subscribers"] >= 3
+assert event_bus_status["deliveries"] >= 3
+assert event_bus_status["errors"] == 0
 assert episodic["ok"] is True
 assert procedural["ok"] is True
 assert dna_memory["ok"] is True
+assert working["ok"] is True
+assert semantic["ok"] is True
+assert collective["ok"] is True
