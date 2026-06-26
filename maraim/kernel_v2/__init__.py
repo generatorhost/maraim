@@ -2,6 +2,7 @@ from .runtime_object import RuntimeObject, RuntimeState, RuntimeIdentity, DNARun
 from .runtime_graph import RuntimeGraph
 from .dna_manager import DNAManager
 from .engines import KernelV2
+from .lifecycle import RuntimeLifecycleManager
 from .runtime_types import (
     CommanderRuntime,
     MissionRuntime,
