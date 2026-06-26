@@ -2,10 +2,11 @@
 import time
 
 class TaskExecutorRuntime:
-    def __init__(self, event_bus, memory, organization):
+    def __init__(self, event_bus, memory, organization, scraping_runner=None):
         self.event_bus = event_bus
         self.memory = memory
         self.organization = organization
+        self.scraping_runner = scraping_runner
         self.executions = []
 
     def execute(self, task):
@@ -39,6 +40,9 @@ class TaskExecutorRuntime:
     def _simulate_output(self, task):
         t = task.get("type")
         if t == "project_discovery":
+             
+            if self.scraping_runner:
+                return self.scraping_runner()
             return "Project discovery task executed by scouting team."
         if t == "project_analysis":
             return "Project analysis task executed by analysis team."
