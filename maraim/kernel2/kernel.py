@@ -89,6 +89,15 @@ class MaraimKernel:
     def run_workflow(self, workflow_id, payload=None):
         return self.workflow_runtime.run(workflow_id, payload or {})
 
+    def run_all_tasks(self, limit=50):
+        results = []
+        for _ in range(limit):
+            r = self.run_next_task()
+            if not r.get("ok"):
+                break
+            results.append(r)
+        return {"ok": True, "processed": len(results), "results": results, "status": self.status()}
+
     def run_next_task(self):
         item = self.scheduler_runtime.next()
         if not item:
@@ -128,3 +137,4 @@ class MaraimKernel:
         self.mcp_runtime.register_tool("scheduler.status", lambda _: self.scheduler_runtime.status(), "Return scheduler status")
         self.mcp_runtime.register_tool("approval.create", lambda payload: self.approval_runtime.create(payload.get("task", {}), payload.get("context", {})), "Create approval request")
         self.mcp_runtime.register_tool("scheduler.run_next", lambda _: self.run_next_task(), "Run next queued task")
+        self.mcp_runtime.register_tool("scheduler.run_all", lambda payload: self.run_all_tasks(payload.get("limit", 50)), "Run all queued tasks")
