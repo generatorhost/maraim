@@ -19,5 +19,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: python scripts/kernel_v2_canonical_guard.py
-      - run: python scripts/kernel_v2_all_smoke.py
+      - name: Run canonical CI gate
+        run: python scripts/kernel_v2_ci_gate.py
