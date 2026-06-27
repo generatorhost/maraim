@@ -22,6 +22,7 @@ class ResultArtifactV2:
         if not run_result.get("id"):
             return {"ok": False, "error": "run_id_missing"}
         artifact_id = self._artifact_id(run_result["id"], label)
+        permission_summary = self._permission_summary(run_result)
         artifact = {
             "id": artifact_id,
             "label": label,
@@ -29,6 +30,8 @@ class ResultArtifactV2:
             "graph": run_result.get("graph"),
             "ok": run_result.get("ok", False),
             "mode": run_result.get("mode"),
+            "required_permissions": run_result.get("required_permissions", []),
+            "permission_summary": permission_summary,
             "results": run_result.get("results", []),
             "blocked": run_result.get("blocked", []),
             "completed_runtimes": run_result.get("completed_runtimes", []),
@@ -36,7 +39,7 @@ class ResultArtifactV2:
         }
         stored = self.storage.put(self.namespace, artifact_id, artifact, metadata={"label": label, "run": run_result["id"]})
         self.artifacts.append(artifact)
-        self._emit("captured", {"artifact": artifact_id, "run": run_result["id"]})
+        self._emit("captured", {"artifact": artifact_id, "run": run_result["id"], "permissions": permission_summary})
         return {"ok": stored.get("ok", False), "artifact": artifact, "stored": stored}
 
     def get(self, artifact_id: str) -> Dict[str, Any]:
@@ -58,11 +61,26 @@ class ResultArtifactV2:
             "result_count": len(artifact.get("results", [])),
             "blocked_count": len(artifact.get("blocked", [])),
             "completed_count": len(artifact.get("completed_runtimes", [])),
+            "permission_summary": artifact.get("permission_summary", {}),
             "successful": artifact.get("ok", False),
         }
 
     def status(self) -> Dict[str, Any]:
         return {"artifacts": len(self.artifacts), "storage": self.storage.status()}
+
+    def _permission_summary(self, run_result: Dict[str, Any]) -> Dict[str, Any]:
+        allowed = 0
+        blocked = 0
+        missing: Dict[str, int] = {}
+        for item in run_result.get("results", []):
+            permissions = item.get("permissions", {})
+            if permissions.get("can_execute"):
+                allowed += 1
+            else:
+                blocked += 1
+            for permission in permissions.get("missing", []):
+                missing[permission] = missing.get(permission, 0) + 1
+        return {"allowed": allowed, "blocked": blocked, "missing": missing}
 
     def _artifact_id(self, run_id: str, label: str) -> str:
         safe_run = "".join(ch if ch.isalnum() else "_" for ch in run_id)[:80].strip("_")
