@@ -15,6 +15,7 @@ FOUNDATION_MODULES = [
     "maraim/kernel_v2/execution_adapter_v2.py",
     "maraim/kernel_v2/result_artifact_v2.py",
     "maraim/kernel_v2/permission_sandbox.py",
+    "maraim/kernel_v2/audit_trail.py",
 ]
 
 EXPECTED_SMOKES = [
@@ -30,6 +31,7 @@ EXPECTED_SMOKES = [
     "scripts/kernel_v2_execution_adapter_v2_smoke.py",
     "scripts/kernel_v2_result_artifact_v2_smoke.py",
     "scripts/kernel_v2_permission_sandbox_smoke.py",
+    "scripts/kernel_v2_audit_trail_smoke.py",
 ]
 
 FORBIDDEN_TOKENS = [
