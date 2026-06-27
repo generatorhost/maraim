@@ -19,12 +19,12 @@ Hot Reload                      ██████████░░░░░ 70
 Mount / Unmount                 ████████████░░░ 80%
 Dependency Resolver v2          ████████████░░░ 80%
 TaskGraph v2                    ███████████░░░░ 75%
-Execution Adapter v2            █████████░░░░░░ 60%
-Result Artifact v2              █████████░░░░░░ 60%
+Execution Adapter v2            ███████████░░░░ 75%
+Result Artifact v2              ███████████░░░░ 75%
 Storage Engine                  █████████░░░░░░ 60%
 Diagnostics / Health            ███████░░░░░░░░ 45%
 Source Adapters                 ███████░░░░░░░░ 45%
-Permission Sandbox              ████████░░░░░░░ 55%
+Permission Sandbox              █████████░░░░░░ 65%
 Foundation Guard                ███████████████ 100%
 Swarm Engine                    ███░░░░░░░░░░░░ 20%
 Evolution Runtime               ███░░░░░░░░░░░░ 20%
@@ -76,8 +76,8 @@ The smoke gate currently includes:
 7. Source Adapters for Git, Archive, and Folder in manifest-only mode.
 8. Dependency Resolver v2.
 9. TaskGraph v2.
-10. Execution Adapter v2 in simulated mode only.
-11. Result Artifact v2 using in-memory storage.
+10. Execution Adapter v2 in simulated mode with permission gate.
+11. Result Artifact v2 using in-memory storage with permission summary.
 12. Permission Sandbox foundation in policy-only mode.
 13. CI smoke workflow for Phase 2.
 14. Preflight compile/import check.
