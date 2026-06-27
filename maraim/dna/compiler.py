@@ -1,62 +1,65 @@
-import json, hashlib
+"""Deprecated compatibility adapter for legacy DNA compilation.
+
+Maraim no longer uses a DNA Compiler architecture. The active architecture is:
+
+    project tree / archive / repository
+        -> DNAExtractorEngine
+        -> MDP foundation package
+        -> RuntimeObjects / RuntimeGraph
+
+This module is intentionally kept only to avoid breaking old imports that call
+`compile_dna`. It does not write to the legacy DB tables and should not be used
+for new code.
+"""
+
 from pathlib import Path
+from typing import Any, Dict, Iterable, List
 
-def sha256_file(path):
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(1024*1024), b""):
-            h.update(chunk)
-    return h.hexdigest()
+from maraim.kernel_v2.dna_extractor_engine import DNAExtractorEngine
 
-def classify(path, text):
-    low = (str(path) + "\n" + text[:2000]).lower()
-    rules = [
-        ("chief", ["chief", "رئيس"]),
-        ("team", ["team", "فريق"]),
-        ("agent", ["agent", "وكيل"]),
-        ("skill", ["skill", "مهارة"]),
-        ("capability", ["capability", "قدرة"]),
-        ("workflow", ["workflow", "pipeline", "مسار"]),
-        ("knowledge", ["knowledge", "rag", "memory", "معرفة"]),
-        ("runtime", ["runtime", "kernel", "تنفيذ"]),
-        ("scraping", ["scraping", "crawler", "scraper", "استخراج"])
-    ]
-    for typ, terms in rules:
-        if any(t in low for t in terms):
-            return typ
-    return "document"
+SUPPORTED_TEXT_EXTENSIONS = {".json", ".md", ".txt", ".jsonl", ".py", ".js", ".ts", ".tsx", ".jsx", ".mjs"}
 
-def compile_dna(db, source_dir):
-    source_dir = Path(source_dir)
-    source_dir.mkdir(parents=True, exist_ok=True)
-    compiled = 0
-    scanned = 0
-    for p in source_dir.rglob("*"):
-        if not p.is_file():
+
+def _collect_paths(source_dir: Path) -> List[str]:
+    return [str(path.relative_to(source_dir)).replace("\\", "/") for path in source_dir.rglob("*") if path.is_file()]
+
+
+def _collect_text_contents(source_dir: Path, relative_paths: Iterable[str]) -> Dict[str, str]:
+    contents: Dict[str, str] = {}
+    for relative in relative_paths:
+        path = source_dir / relative
+        if path.suffix.lower() not in SUPPORTED_TEXT_EXTENSIONS:
             continue
-        if p.suffix.lower() not in [".json", ".md", ".txt", ".jsonl"]:
-            continue
-        scanned += 1
         try:
-            text = p.read_text(encoding="utf-8", errors="ignore")
+            contents[relative] = path.read_text(encoding="utf-8", errors="ignore")
         except Exception:
             continue
-        h = sha256_file(p)
-        kind = p.suffix.lower().lstrip(".")
-        db.execute(
-            "INSERT OR IGNORE INTO dna_sources(path,kind,sha256,size_bytes) VALUES(?,?,?,?)",
-            (str(p), kind, h, p.stat().st_size)
-        )
-        source_id = db.execute("SELECT id FROM dna_sources WHERE path=?", (str(p),)).fetchone()["id"]
-        object_type = classify(p, text)
-        object_key = f"{object_type}:{h[:16]}"
-        title = p.stem[:200]
-        payload = json.dumps({"path": str(p), "excerpt": text[:4000]}, ensure_ascii=False)
-        db.execute(
-            """INSERT OR REPLACE INTO runtime_objects(source_id,object_type,object_key,title,payload,status)
-               VALUES(?,?,?,?,?,'active')""",
-            (source_id, object_type, object_key, title, payload)
-        )
-        compiled += 1
-    db.commit()
-    return {"ok": True, "scanned": scanned, "compiled": compiled}
+    return contents
+
+
+def compile_dna(db: Any, source_dir: str) -> Dict[str, Any]:
+    """Compatibility wrapper around DNAExtractorEngine.
+
+    `db` is accepted for old callers but is intentionally ignored. New code must
+    call `DNAExtractorEngine.extract_from_tree()` directly.
+    """
+
+    source = Path(source_dir)
+    source.mkdir(parents=True, exist_ok=True)
+    relative_paths = _collect_paths(source)
+    contents = _collect_text_contents(source, relative_paths)
+    extractor = DNAExtractorEngine()
+    package = extractor.extract_from_tree(
+        source_id=source.name or "dna_source",
+        paths=relative_paths,
+        metadata={"source": "legacy_compile_dna_adapter", "deprecated": True},
+        file_contents=contents,
+    )
+    return {
+        "ok": True,
+        "deprecated": True,
+        "adapter": "DNAExtractorEngine",
+        "scanned": len(relative_paths),
+        "compiled": len(package.get("runtime_objects", [])),
+        "package": package,
+    }
