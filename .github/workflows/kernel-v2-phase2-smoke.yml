@@ -28,5 +28,8 @@ jobs:
       - name: Run kernel v2 preflight
         run: python scripts/kernel_v2_preflight.py
 
+      - name: Run kernel v2 foundation guard
+        run: python scripts/kernel_v2_foundation_guard.py
+
       - name: Run phase 2 smoke suite
         run: python scripts/kernel_v2_phase2_all_smoke.py
