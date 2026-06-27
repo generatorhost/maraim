@@ -10,6 +10,7 @@ from maraim.kernel_v2 import (
     DNAExtractorEngine,
     DNAPackageEngine,
     KernelV2,
+    ModelEngine,
     RuntimeLifecycleManager,
     RuntimeObjectManager,
     RuntimeResourceManager,
@@ -159,6 +160,14 @@ package_dependency_resolution = package_engine.resolve_dependencies(extracted["p
 package_status = package_engine.status()
 normalized_package = package_engine.packages[extracted["package_id"]]
 extracted_kinds = {obj["kind"] for obj in extracted["runtime_objects"]}
+model_engine = ModelEngine(kernel)
+model_register = model_engine.register_from_runtime_objects(extracted["runtime_objects"])
+gguf_models = model_engine.resolve_by_format("gguf")
+onnx_models = model_engine.resolve_by_format("onnx")
+safetensors_models = model_engine.resolve_by_format("safetensors")
+load_gguf = model_engine.load_model("models/sample.gguf")
+unload_gguf = model_engine.unload_model("models/sample.gguf")
+model_status = model_engine.status()
 with tempfile.TemporaryDirectory() as tmp:
     legacy_root = Path(tmp)
     (legacy_root / "agents").mkdir()
@@ -209,6 +218,13 @@ print(package_import)
 print(package_export)
 print(package_dependency_resolution)
 print(package_status)
+print(model_register)
+print(gguf_models)
+print(onnx_models)
+print(safetensors_models)
+print(load_gguf)
+print(unload_gguf)
+print(model_status)
 print(legacy_compile)
 
 assert status["state"] == "running"
@@ -302,6 +318,17 @@ assert package_status["package_objects"] >= 1
 assert package_status["package_graph_edges"] >= len(normalized_package["runtime_objects"])
 assert normalized_package["package_graph"]["node_count"] >= len(normalized_package["runtime_objects"])
 assert normalized_package["package_graph"]["edge_count"] >= len(normalized_package["runtime_objects"])
+assert model_register["ok"] is True
+assert model_register["count"] >= 3
+assert gguf_models["ok"] is True
+assert onnx_models["ok"] is True
+assert safetensors_models["ok"] is True
+assert load_gguf["ok"] is True
+assert unload_gguf["ok"] is True
+assert model_status["models"] >= 3
+assert model_status["formats"]["gguf"] >= 1
+assert model_status["formats"]["onnx"] >= 1
+assert model_status["formats"]["safetensors"] >= 1
 assert legacy_compile["ok"] is True
 assert legacy_compile["deprecated"] is True
 assert legacy_compile["adapter"] == "DNAExtractorEngine"
