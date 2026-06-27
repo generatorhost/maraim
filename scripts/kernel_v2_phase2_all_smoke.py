@@ -11,6 +11,7 @@ SMOKE_TESTS = [
     "scripts/kernel_v2_mount_manager_smoke.py",
     "scripts/kernel_v2_storage_health_smoke.py",
     "scripts/kernel_v2_source_adapters_smoke.py",
+    "scripts/kernel_v2_dependency_resolver_v2_smoke.py",
 ]
 
 results = []
