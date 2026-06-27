@@ -35,6 +35,7 @@ from .phase3_foundation import (
     FederationManifestBuilder,
     EvolutionExportPlanner,
 )
+from .phase4_foundation import Phase4FoundationEngine, PHASE4_STAGES
 from .runtime_systems import (
     RuntimeSystemEngine,
     PluginRuntimeEngine,
