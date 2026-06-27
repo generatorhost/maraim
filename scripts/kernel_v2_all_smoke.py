@@ -1,29 +1,15 @@
 import runpy
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
 
-SMOKE_TESTS = [
-    "scripts/kernel_v2_smoke.py",
-    "scripts/kernel_v2_runtime_systems_smoke.py",
-    "scripts/kernel_v2_runtime_store_smoke.py",
-]
+CANONICAL_SMOKE_GATE = "scripts/kernel_v2_phase2_plus4_smoke.py"
 
+gate = ROOT / CANONICAL_SMOKE_GATE
+if not gate.exists():
+    raise FileNotFoundError(CANONICAL_SMOKE_GATE)
 
-def run_smoke(relative_path: str) -> dict:
-    script = ROOT / relative_path
-    if not script.exists():
-        return {"ok": False, "script": relative_path, "error": "script_not_found"}
-    runpy.run_path(str(script), run_name="__main__")
-    return {"ok": True, "script": relative_path}
+runpy.run_path(str(gate), run_name="__main__")
 
-
-results = [run_smoke(path) for path in SMOKE_TESTS]
-failed = [item for item in results if not item["ok"]]
-
-print("MARAIM_KERNEL_V2_ALL_SMOKE_OK" if not failed else "MARAIM_KERNEL_V2_ALL_SMOKE_FAILED")
-print(results)
-
-assert not failed, failed
+print("MARAIM_KERNEL_V2_ALL_SMOKE_OK")
+print({"canonical_gate": CANONICAL_SMOKE_GATE})
