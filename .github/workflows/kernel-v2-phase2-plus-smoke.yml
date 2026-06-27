@@ -1,0 +1,32 @@
+name: Kernel v2 Phase 2 Plus Smoke
+
+on:
+  push:
+    branches:
+      - v1.2-execution-engine
+  pull_request:
+    branches:
+      - main
+      - v1.2-execution-engine
+  workflow_dispatch:
+
+jobs:
+  smoke-plus:
+    name: Run kernel v2 phase 2 plus smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run kernel v2 preflight plus
+        run: python scripts/kernel_v2_preflight_plus.py
+
+      - name: Run phase 2 plus smoke suite
+        run: python scripts/kernel_v2_phase2_plus_smoke.py
