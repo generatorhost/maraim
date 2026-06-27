@@ -5,6 +5,7 @@ ROOT = Path(__file__).resolve().parents[1]
 canonical = ROOT / "scripts/kernel_v2_all_smoke.py"
 phase4_smoke = ROOT / "scripts/kernel_v2_phase4_foundation_smoke.py"
 init_file = ROOT / "maraim/kernel_v2/__init__.py"
+real_adapters = ROOT / "maraim/kernel_v2/real_adapters_foundation.py"
 
 required_smokes = [
     "scripts/kernel_v2_smoke.py",
@@ -25,6 +26,7 @@ required_smokes = [
     "scripts/kernel_v2_report_snapshot_smoke.py",
     "scripts/kernel_v2_phase3_foundation_smoke.py",
     "scripts/kernel_v2_phase4_foundation_smoke.py",
+    "scripts/kernel_v2_real_adapters_foundation_smoke.py",
 ]
 
 transition_gates = [
@@ -34,10 +36,11 @@ transition_gates = [
     "scripts/kernel_v2_phase2_plus4_smoke.py",
 ]
 
-missing = [str(path.relative_to(ROOT)) for path in [canonical, phase4_smoke, init_file] if not path.exists()]
+missing = [str(path.relative_to(ROOT)) for path in [canonical, phase4_smoke, init_file, real_adapters] if not path.exists()]
 canonical_text = canonical.read_text(encoding="utf-8") if canonical.exists() else ""
 phase4_text = phase4_smoke.read_text(encoding="utf-8") if phase4_smoke.exists() else ""
 init_text = init_file.read_text(encoding="utf-8") if init_file.exists() else ""
+real_adapters_text = real_adapters.read_text(encoding="utf-8") if real_adapters.exists() else ""
 
 violations = []
 for smoke in required_smokes:
@@ -50,8 +53,13 @@ if "from maraim.kernel_v2 import KernelV2, PHASE4_STAGES, Phase4FoundationEngine
     violations.append("phase4_smoke_does_not_use_public_api")
 if "from .phase4_foundation import Phase4FoundationEngine, PHASE4_STAGES" not in init_text:
     violations.append("phase4_not_exported_from_public_api")
+if "from .real_adapters_foundation import RealAdapterFoundation" not in init_text:
+    violations.append("real_adapters_not_exported_from_public_api")
 if "maraim.kernel_v2.phase4_foundation" in phase4_text:
     violations.append("phase4_smoke_uses_deep_import")
+for token in ["import subprocess", "import requests", "import sqlite3", "open(", ".write_text(", ".write_bytes("]:
+    if token in real_adapters_text:
+        violations.append(f"real_adapters_forbidden_token:{token}")
 
 print("MARAIM_KERNEL_V2_CANONICAL_GUARD_OK")
 print({"missing": missing, "violations": violations})
