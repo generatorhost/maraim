@@ -8,6 +8,7 @@ sys.path.insert(0, str(ROOT))
 SMOKE_TESTS = [
     "scripts/kernel_v2_smoke.py",
     "scripts/kernel_v2_runtime_systems_smoke.py",
+    "scripts/kernel_v2_runtime_store_smoke.py",
 ]
 
 
