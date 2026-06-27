@@ -13,6 +13,7 @@ SMOKE_TESTS = [
     "scripts/kernel_v2_source_adapters_smoke.py",
     "scripts/kernel_v2_dependency_resolver_v2_smoke.py",
     "scripts/kernel_v2_task_graph_v2_smoke.py",
+    "scripts/kernel_v2_execution_adapter_v2_smoke.py",
 ]
 
 results = []
