@@ -80,7 +80,9 @@ extractor_status = extractor.status()
 package_engine = DNAPackageEngine(kernel)
 package_import = package_engine.import_package(extracted)
 package_export = package_engine.export_package(extracted["package_id"])
+package_dependency_resolution = package_engine.resolve_dependencies(extracted["package_id"])
 package_status = package_engine.status()
+normalized_package = package_engine.packages[extracted["package_id"]]
 with tempfile.TemporaryDirectory() as tmp:
     legacy_root = Path(tmp)
     (legacy_root / "agents").mkdir()
@@ -129,6 +131,7 @@ print(extracted)
 print(extractor_status)
 print(package_import)
 print(package_export)
+print(package_dependency_resolution)
 print(package_status)
 print(legacy_compile)
 
@@ -204,11 +207,19 @@ assert any(edge["relation"] == "can_use_model" for edge in extracted["graph_edge
 assert extractor_status["extractions"] >= 1
 assert package_import["ok"] is True
 assert package_import["package_runtime"]
+assert package_import["manifest"]["schema_version"] == DNAPackageEngine.SCHEMA_VERSION
+assert "gguf" in package_import["manifest"]["requirements"]["model_formats"]
 assert len(package_import["mounted_objects"]) >= len(extracted["runtime_objects"])
 assert package_export["ok"] is True
 assert package_export["export_name"].endswith(".mdp")
+assert "\"manifest\"" in package_export["content"]
+assert "\"package_graph\"" in package_export["content"]
+assert package_dependency_resolution["ok"] is True
 assert package_status["packages"] >= 1
 assert package_status["package_objects"] >= 1
+assert package_status["package_graph_edges"] >= len(normalized_package["runtime_objects"])
+assert normalized_package["package_graph"]["node_count"] >= len(normalized_package["runtime_objects"])
+assert normalized_package["package_graph"]["edge_count"] >= len(normalized_package["runtime_objects"])
 assert legacy_compile["ok"] is True
 assert legacy_compile["deprecated"] is True
 assert legacy_compile["adapter"] == "DNAExtractorEngine"
