@@ -20,6 +20,7 @@ from .dependency_resolver_v2 import DependencyResolverV2
 from .task_graph_v2 import TaskGraphV2
 from .execution_adapter_v2 import ExecutionAdapterV2
 from .result_artifact_v2 import ResultArtifactV2
+from .permission_sandbox import PermissionSandbox
 from .runtime_systems import (
     RuntimeSystemEngine,
     PluginRuntimeEngine,
