@@ -24,6 +24,8 @@ from .permission_sandbox import PermissionSandbox
 from .audit_trail import RuntimeAuditTrail
 from .metrics_engine import RuntimeMetricsEngine
 from .trace_engine import RuntimeTraceEngine
+from .report_builder import RuntimeReportBuilder
+from .snapshot_builder import RuntimeSnapshotBuilder
 from .runtime_systems import (
     RuntimeSystemEngine,
     PluginRuntimeEngine,
