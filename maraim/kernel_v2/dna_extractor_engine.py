@@ -346,6 +346,10 @@ class DNAExtractorEngine:
 
         if suffix in self.MODEL_EXTENSIONS:
             return "model", ["model_asset", suffix.lstrip(".")]
+        if top in self.DIRECTORY_KIND_RULES:
+            return self.DIRECTORY_KIND_RULES[top]
+        if name in {"schema.sql", "migration.sql"} or top in {"migrations", "database", "db", "schemas"}:
+            return "database", ["database_schema"]
         if suffix in self.DATASET_EXTENSIONS:
             return "dataset", ["dataset_source", suffix.lstrip(".")]
         if suffix in self.ASSET_EXTENSIONS:
@@ -356,10 +360,6 @@ class DNAExtractorEngine:
             if name.endswith(".env") or name == ".env":
                 return "environment", ["environment_definition"]
             return "configuration", ["project_configuration"]
-        if name in {"schema.sql", "migration.sql"} or top in {"migrations", "database", "db", "schemas"}:
-            return "database", ["database_schema"]
-        if top in self.DIRECTORY_KIND_RULES:
-            return self.DIRECTORY_KIND_RULES[top]
         if stem in {"prompt", "system_prompt", "instructions"}:
             return "prompt", ["prompt_template"]
         if stem in {"policy", "policies"}:
