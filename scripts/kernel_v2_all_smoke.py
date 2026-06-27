@@ -22,6 +22,7 @@ SMOKE_TESTS = [
     "scripts/kernel_v2_report_snapshot_smoke.py",
     "scripts/kernel_v2_phase3_foundation_smoke.py",
     "scripts/kernel_v2_phase4_foundation_smoke.py",
+    "scripts/kernel_v2_real_adapters_foundation_smoke.py",
 ]
 
 results = []
