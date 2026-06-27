@@ -9,6 +9,7 @@ from maraim.kernel_v2 import (
     DNAExtractorEngine,
     ExecutionAdapterV2,
     KernelV2,
+    PermissionSandbox,
     RuntimeStore,
     TaskGraphV2,
 )
@@ -18,7 +19,8 @@ extractor = DNAExtractorEngine(kernel)
 store = RuntimeStore(kernel)
 resolver = DependencyResolverV2(kernel, store)
 task_graph = TaskGraphV2(kernel, resolver)
-executor = ExecutionAdapterV2(kernel, task_graph)
+sandbox = PermissionSandbox(kernel)
+executor = ExecutionAdapterV2(kernel, task_graph, sandbox)
 
 package = extractor.extract_from_tree(
     "execution_adapter_sample",
@@ -46,24 +48,32 @@ resolver.register_edges([
 
 graph = task_graph.build_from_runtime(plugin_id, goal="execute_freelance_plan")
 dry_run = executor.dry_run(graph["id"])
-first_run = executor.run(graph["id"])
-resumed = executor.resume(first_run["id"])
+blocked_run = executor.run(graph["id"])
+for step in dry_run["steps"]:
+    sandbox.grant(step["runtime"], ["execute_simulated"], reason="execution_adapter_smoke")
+allowed_run = executor.run(graph["id"])
+resumed = executor.resume(allowed_run["id"])
 missing = executor.resume("missing.run")
 status = executor.status()
 
 print("MARAIM_EXECUTION_ADAPTER_V2_SMOKE_OK")
 print(dry_run)
-print(first_run)
+print(blocked_run)
+print(allowed_run)
 print(status)
 
 assert package["ok"] is True
 assert graph["id"]
 assert dry_run["ok"] is True
 assert dry_run["count"] == len(graph["tasks"])
-assert first_run["id"]
-assert first_run["results"]
-assert first_run["completed_runtimes"]
+assert blocked_run["ok"] is False
+assert blocked_run["blocked"]
+assert all(item["permissions"]["can_execute"] is False for item in blocked_run["blocked"])
+assert allowed_run["id"]
+assert allowed_run["results"]
+assert allowed_run["completed_runtimes"]
+assert any(item["permissions"]["can_execute"] is True for item in allowed_run["results"])
 assert resumed["id"]
 assert missing["ok"] is False
-assert status["runs"] >= 2
-assert status["history"] >= 2
+assert status["runs"] >= 3
+assert status["history"] >= 3
