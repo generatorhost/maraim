@@ -17,6 +17,7 @@ SMOKE_TESTS = [
     "scripts/kernel_v2_result_artifact_v2_smoke.py",
     "scripts/kernel_v2_permission_sandbox_smoke.py",
     "scripts/kernel_v2_audit_trail_smoke.py",
+    "scripts/kernel_v2_metrics_engine_smoke.py",
 ]
 
 results = []
