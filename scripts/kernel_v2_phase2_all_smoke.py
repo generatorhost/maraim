@@ -9,6 +9,7 @@ SMOKE_TESTS = [
     "scripts/kernel_v2_runtime_store_smoke.py",
     "scripts/kernel_v2_hot_reload_smoke.py",
     "scripts/kernel_v2_mount_manager_smoke.py",
+    "scripts/kernel_v2_storage_health_smoke.py",
 ]
 
 results = []
