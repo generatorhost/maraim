@@ -96,14 +96,14 @@ class DNAPackageEngine:
                 obj = DNAExtractedRuntimeObject(spec)
                 obj.discover(self.kernel).validate(self.kernel).mount(self.kernel).connect(self.kernel)
                 self.kernel.graph.add_node(obj)
-                self.kernel.graph.add_edge(package_runtime.id, "exports", obj.id, {"package_id": package_id})
+                self.kernel.graph.connect(package_runtime.id, "exports", obj.id, package_id=package_id)
                 mounted_objects.append(obj.id)
             for edge in package.get("graph_edges", []):
                 source = edge.get("source")
                 target = edge.get("target")
                 relation = edge.get("relation")
                 if source and target and relation and self.kernel.graph.get(source) and self.kernel.graph.get(target):
-                    self.kernel.graph.add_edge(source, relation, target, edge.get("metadata", {}))
+                    self.kernel.graph.connect(source, relation, target, **edge.get("metadata", {}))
                     mounted_edges.append(edge)
             self.kernel.emit("dna_package.imported", {"package_id": package_id, "objects": len(mounted_objects), "edges": len(mounted_edges)})
         record = {"action": "import", "package_id": package_id, "timestamp": time.time(), "objects": len(mounted_objects), "edges": len(mounted_edges)}
