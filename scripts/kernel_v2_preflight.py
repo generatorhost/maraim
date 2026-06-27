@@ -24,6 +24,7 @@ MODULES = [
     "maraim.kernel_v2.task_graph_v2",
     "maraim.kernel_v2.execution_adapter_v2",
     "maraim.kernel_v2.result_artifact_v2",
+    "maraim.kernel_v2.permission_sandbox",
     "maraim.kernel_v2",
 ]
 
