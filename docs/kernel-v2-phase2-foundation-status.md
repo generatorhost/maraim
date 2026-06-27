@@ -22,6 +22,7 @@ TaskGraph v2                    ███████████░░░░ 75
 Execution Adapter v2            ███████████░░░░ 75%
 Result Artifact v2              ███████████░░░░ 75%
 Audit Trail                     ██████████░░░░░ 70%
+Metrics Engine                  ██████████░░░░░ 70%
 Storage Engine                  █████████░░░░░░ 60%
 Diagnostics / Health            ███████░░░░░░░░ 45%
 Source Adapters                 ███████░░░░░░░░ 45%
@@ -66,6 +67,7 @@ The smoke gate currently includes:
 - `scripts/kernel_v2_result_artifact_v2_smoke.py`
 - `scripts/kernel_v2_permission_sandbox_smoke.py`
 - `scripts/kernel_v2_audit_trail_smoke.py`
+- `scripts/kernel_v2_metrics_engine_smoke.py`
 
 ## Completed as Foundation
 
@@ -82,9 +84,10 @@ The smoke gate currently includes:
 11. Result Artifact v2 using in-memory storage with permission summary.
 12. Permission Sandbox foundation in policy-only mode.
 13. Runtime Audit Trail foundation in memory.
-14. CI smoke workflow for Phase 2.
-15. Preflight compile/import check.
-16. Foundation Guard for forbidden side effects and smoke-gate coverage.
+14. Runtime Metrics Engine foundation in memory.
+15. CI smoke workflow for Phase 2.
+16. Preflight compile/import check.
+17. Foundation Guard for forbidden side effects and smoke-gate coverage.
 
 ## Not Yet Production-Complete
 
