@@ -12,17 +12,9 @@ python scripts/kernel_v2_all_smoke.py
 
 This is the only public smoke gate name that should be used by developers, CI, and future documentation.
 
-## Internal Gates
+## Gate Policy
 
-The following files are internal transition gates and should not be treated as public entrypoints:
-
-- `scripts/kernel_v2_phase2_all_smoke.py`
-- `scripts/kernel_v2_phase2_plus_smoke.py`
-- `scripts/kernel_v2_phase2_plus2_smoke.py`
-- `scripts/kernel_v2_phase2_plus3_smoke.py`
-- `scripts/kernel_v2_phase2_plus4_smoke.py`
-
-They remain only to avoid breaking previous work and to keep each phase auditable.
+`kernel_v2_all_smoke.py` directly lists and runs every real smoke test. Transitional `plus` gates must not be used as public entrypoints or CI entrypoints.
 
 ## Canonical Guard
 
@@ -34,7 +26,8 @@ python scripts/kernel_v2_canonical_guard.py
 
 This checks that:
 
-- `kernel_v2_all_smoke.py` calls the latest internal gate.
+- `kernel_v2_all_smoke.py` contains every required real smoke test.
+- `kernel_v2_all_smoke.py` does not depend on transitional plus gates.
 - Phase4 uses public API imports.
 - Phase4 is exported from `maraim.kernel_v2`.
 - Phase4 smoke does not use deep imports.
@@ -44,3 +37,5 @@ This checks that:
 ```text
 .github/workflows/kernel-v2-canonical-smoke.yml
 ```
+
+Only the canonical workflow should run on push or pull request for Kernel v2 smoke validation.
