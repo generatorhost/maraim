@@ -24,8 +24,8 @@ Result Artifact v2              █████████░░░░░░ 60
 Storage Engine                  █████████░░░░░░ 60%
 Diagnostics / Health            ███████░░░░░░░░ 45%
 Source Adapters                 ███████░░░░░░░░ 45%
+Permission Sandbox              ████████░░░░░░░ 55%
 Foundation Guard                ███████████████ 100%
-Security / Sandbox              ██░░░░░░░░░░░░░ 10%
 Swarm Engine                    ███░░░░░░░░░░░░ 20%
 Evolution Runtime               ███░░░░░░░░░░░░ 20%
 DNA Federation                  ░░░░░░░░░░░░░░░ 0%
@@ -63,6 +63,7 @@ The smoke gate currently includes:
 - `scripts/kernel_v2_task_graph_v2_smoke.py`
 - `scripts/kernel_v2_execution_adapter_v2_smoke.py`
 - `scripts/kernel_v2_result_artifact_v2_smoke.py`
+- `scripts/kernel_v2_permission_sandbox_smoke.py`
 
 ## Completed as Foundation
 
@@ -77,9 +78,10 @@ The smoke gate currently includes:
 9. TaskGraph v2.
 10. Execution Adapter v2 in simulated mode only.
 11. Result Artifact v2 using in-memory storage.
-12. CI smoke workflow for Phase 2.
-13. Preflight compile/import check.
-14. Foundation Guard for forbidden side effects and smoke-gate coverage.
+12. Permission Sandbox foundation in policy-only mode.
+13. CI smoke workflow for Phase 2.
+14. Preflight compile/import check.
+15. Foundation Guard for forbidden side effects and smoke-gate coverage.
 
 ## Not Yet Production-Complete
 
@@ -87,8 +89,7 @@ The following are not complete production implementations yet:
 
 - Real Git clone/fetch adapter.
 - Real ZIP/archive extraction adapter.
-- Real execution sandbox.
-- Real permissions enforcement.
+- Real operating-system sandbox.
 - Real subprocess/container execution.
 - Real persistent storage adapter.
 - Real metrics/tracing backend.
