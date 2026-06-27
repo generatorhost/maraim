@@ -2,22 +2,8 @@ import runpy
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+CANONICAL = ROOT / "scripts/kernel_v2_all_smoke.py"
 
-SMOKE_TESTS = [
-    "scripts/kernel_v2_phase2_plus3_smoke.py",
-    "scripts/kernel_v2_phase4_foundation_smoke.py",
-]
-
-results = []
-for relative_path in SMOKE_TESTS:
-    script = ROOT / relative_path
-    if not script.exists():
-        results.append({"ok": False, "script": relative_path, "error": "script_not_found"})
-    else:
-        runpy.run_path(str(script), run_name="__main__")
-        results.append({"ok": True, "script": relative_path})
-
-failed = [item for item in results if not item["ok"]]
-print("MARAIM_KERNEL_V2_PHASE2_PLUS4_SMOKE_OK" if not failed else "MARAIM_KERNEL_V2_PHASE2_PLUS4_SMOKE_FAILED")
-print(results)
-assert not failed, failed
+print("MARAIM_KERNEL_V2_PHASE2_PLUS4_SMOKE_DEPRECATED")
+print({"use": "scripts/kernel_v2_all_smoke.py"})
+runpy.run_path(str(CANONICAL), run_name="__main__")
