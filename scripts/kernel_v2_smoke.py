@@ -62,18 +62,93 @@ extractor = DNAExtractorEngine(kernel)
 project_paths = [
     "agents/research_agent.py",
     "workflows/research_workflow.py",
+    "missions/research_mission.yaml",
+    "tasks/discover_task.yaml",
+    "jobs/nightly_job.yaml",
+    "skills/research_skill.md",
+    "capabilities/text_generation.yaml",
     "tools/browser_tool.py",
+    "plugins/upwork_plugin.py",
+    "connectors/github_connector.py",
+    "integrations/slack_integration.py",
+    "providers/openai_provider.py",
+    "services/report_service.py",
+    "microservices/worker_service.py",
+    "apis/research_api.py",
+    "routes/health.py",
+    "mcp/server.py",
     "models/sample.gguf",
+    "models/embed.onnx",
+    "models/adapter.safetensors",
     "knowledge/guide.md",
+    "documents/spec.pdf",
+    "memory/seed.jsonl",
+    "vectorstores/chroma.index",
+    "embeddings/embedder.py",
+    "datasets/leads.csv",
+    "pipelines/research_pipeline.yaml",
+    "stages/extract_stage.yaml",
+    "events/project_found.yaml",
+    "triggers/daily_trigger.yaml",
+    "schedules/daily.yaml",
+    "schedulers/priority_scheduler.py",
+    "queues/jobs_queue.yaml",
+    "topics/events_topic.yaml",
+    "runtimes/python_runtime.py",
+    "executors/task_executor.py",
+    "planners/mission_planner.py",
+    "analyzers/market_analyzer.py",
+    "reviewers/quality_reviewer.py",
+    "generators/proposal_generator.py",
+    "validators/output_validator.py",
+    "optimizers/cost_optimizer.py",
+    "reasoners/research_reasoner.py",
+    "orchestrators/swarm_orchestrator.py",
+    "coordinators/team_coordinator.py",
+    "communicators/email_communicator.py",
+    "prompts/system_prompt.md",
+    "templates/report_template.md",
+    "policies/data_policy.md",
+    "rules/pricing_rule.yaml",
+    "permissions/user_permissions.yaml",
+    "guardrails/safety_guardrail.md",
+    "security/sandbox_policy.md",
+    "ui/App.tsx",
+    "components/Card.tsx",
+    "pages/Dashboard.tsx",
+    "screens/ApprovalScreen.tsx",
+    "dashboards/executive_dashboard.json",
+    "artifacts/sample_report.docx",
+    "projects/project_profile.json",
+    "organizations/org.json",
+    "tenants/default_tenant.json",
+    "users/admin_user.json",
+    "marketplaces/freelance_market.json",
+    "freelance/upwork_source.json",
+    "remote_work/remote_source.json",
+    "automation/followup.yaml",
+    "notifications/email_channel.yaml",
+    "monitoring/metrics.yaml",
+    "logs/app.log",
+    "storage/minio.yaml",
+    "cache/redis.yaml",
+    "deployments/docker-compose.yml",
+    "environments/.env",
+    "database/schema.sql",
     "package.json",
     "docker-compose.yml",
     "assets/logo.png",
 ]
 contents = {
-    "agents/research_agent.py": "from fastapi import APIRouter\nclass ResearchAgent:\n    pass\ndef analyze_project():\n    return True\nrouter = APIRouter()\n@router.get('/research')\ndef route():\n    return {}\n",
-    "workflows/research_workflow.py": "def plan():\n    return ['discover','analyze']\n",
+    "agents/research_agent.py": "from fastapi import APIRouter\nimport os\nclass ResearchAgent:\n    pass\ndef analyze_project():\n    return True\nrouter = APIRouter()\n@router.get('/research')\ndef route():\n    return {}\nOPENAI_API_KEY=os.getenv('OPENAI_API_KEY')\n",
+    "apis/research_api.py": "from fastapi import FastAPI\napp = FastAPI()\n@app.post('/api/research')\ndef api_research():\n    return {}\n",
     "tools/browser_tool.py": "import requests\ndef browse(url):\n    return requests.get(url).text\n",
-    "package.json": '{"dependencies":{"react":"latest","vite":"latest"}}',
+    "services/report_service.py": "import redis\nimport psycopg2\ndef run_service():\n    return 'ok'\n",
+    "providers/openai_provider.py": "import openai\ndef call_provider():\n    return openai\n",
+    "workflows/research_workflow.py": "def plan():\n    return ['discover','analyze']\n",
+    "environments/.env": "OPENAI_API_KEY=test\nDATABASE_URL=postgres://local\n",
+    "package.json": '{"dependencies":{"react":"latest","vite":"latest","axios":"latest"}}',
+    "requirements.txt": "fastapi\nrequests\nredis\npsycopg2\n",
 }
 extracted = extractor.extract_from_tree("sample_project", project_paths, metadata={"source": "smoke"}, file_contents=contents)
 extractor_status = extractor.status()
@@ -83,6 +158,7 @@ package_export = package_engine.export_package(extracted["package_id"])
 package_dependency_resolution = package_engine.resolve_dependencies(extracted["package_id"])
 package_status = package_engine.status()
 normalized_package = package_engine.packages[extracted["package_id"]]
+extracted_kinds = {obj["kind"] for obj in extracted["runtime_objects"]}
 with tempfile.TemporaryDirectory() as tmp:
     legacy_root = Path(tmp)
     (legacy_root / "agents").mkdir()
@@ -193,22 +269,28 @@ assert object_status["snapshots"] >= 1
 assert object_status["archived"] >= 1
 assert object_status["history"] >= 6
 assert extracted["ok"] is True
-assert extracted["inventory"]["files"] == 8
+assert extracted["inventory"]["files"] >= 70
 assert extracted["runtime_objects"]
-assert any(obj["kind"] == "model" for obj in extracted["runtime_objects"])
-assert any(obj["kind"] == "agent" for obj in extracted["runtime_objects"])
+assert len(extracted_kinds) >= 45
+assert {"model", "agent", "workflow", "mission", "tool", "plugin", "connector", "provider", "api", "service", "mcp_server", "prompt", "policy", "dataset", "vectorstore", "database", "ui_screen", "dashboard", "deployment", "environment"}.issubset(extracted_kinds)
 assert extracted["export_name"].endswith(".mdp")
-assert extracted["semantic"]["content_files"] == 4
+assert extracted["semantic"]["content_files"] >= 8
 assert extracted["semantic"]["routes"]
 assert extracted["semantic"]["functions"]
+assert extracted["semantic"]["environment_keys"]
+assert extracted["semantic"]["api_clients"]
+assert extracted["semantic"]["database_signals"]
 assert "fastapi" in extracted["inventory"]["frameworks"]
 assert any("api_routes" in obj["capabilities"] for obj in extracted["runtime_objects"])
 assert any(edge["relation"] == "can_use_model" for edge in extracted["graph_edges"])
+assert any(edge["relation"] == "governed_by" for edge in extracted["graph_edges"])
 assert extractor_status["extractions"] >= 1
 assert package_import["ok"] is True
 assert package_import["package_runtime"]
 assert package_import["manifest"]["schema_version"] == DNAPackageEngine.SCHEMA_VERSION
 assert "gguf" in package_import["manifest"]["requirements"]["model_formats"]
+assert "onnx" in package_import["manifest"]["requirements"]["model_formats"]
+assert "safetensors" in package_import["manifest"]["requirements"]["model_formats"]
 assert len(package_import["mounted_objects"]) >= len(extracted["runtime_objects"])
 assert package_export["ok"] is True
 assert package_export["export_name"].endswith(".mdp")
