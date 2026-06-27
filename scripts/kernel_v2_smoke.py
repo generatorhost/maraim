@@ -56,19 +56,26 @@ object_archive = objects.archive(clone_id) if clone_id else {"ok": False}
 object_delete = objects.delete(clone_id) if clone_id else {"ok": False}
 object_status = objects.status()
 extractor = DNAExtractorEngine(kernel)
+project_paths = [
+    "agents/research_agent.py",
+    "workflows/research_workflow.py",
+    "tools/browser_tool.py",
+    "models/sample.gguf",
+    "knowledge/guide.md",
+    "package.json",
+    "docker-compose.yml",
+    "assets/logo.png",
+]
 extracted = extractor.extract_from_tree(
     "sample_project",
-    [
-        "agents/research_agent.py",
-        "workflows/research_workflow.py",
-        "tools/browser_tool.py",
-        "models/sample.gguf",
-        "knowledge/guide.md",
-        "package.json",
-        "docker-compose.yml",
-        "assets/logo.png",
-    ],
+    project_paths,
     metadata={"source": "smoke"},
+    file_contents={
+        "agents/research_agent.py": "from fastapi import APIRouter\nclass ResearchAgent:\n    pass\ndef analyze_project():\n    return True\nrouter = APIRouter()\n@router.get('/research')\ndef route():\n    return {}\n",
+        "workflows/research_workflow.py": "def plan():\n    return ['discover','analyze']\n",
+        "tools/browser_tool.py": "import requests\ndef browse(url):\n    return requests.get(url).text\n",
+        "package.json": '{"dependencies":{"react":"latest","vite":"latest"}}',
+    },
 )
 extractor_status = extractor.status()
 
@@ -176,4 +183,10 @@ assert extracted["runtime_objects"]
 assert any(obj["kind"] == "model" for obj in extracted["runtime_objects"])
 assert any(obj["kind"] == "agent" for obj in extracted["runtime_objects"])
 assert extracted["export_name"].endswith(".mdp")
+assert extracted["semantic"]["content_files"] == 4
+assert extracted["semantic"]["routes"]
+assert extracted["semantic"]["functions"]
+assert "fastapi" in extracted["inventory"]["frameworks"]
+assert any("api_routes" in obj["capabilities"] for obj in extracted["runtime_objects"])
+assert any(edge["relation"] == "can_use_model" for edge in extracted["graph_edges"])
 assert extractor_status["extractions"] >= 1
