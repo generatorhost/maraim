@@ -22,6 +22,7 @@ from .execution_adapter_v2 import ExecutionAdapterV2
 from .result_artifact_v2 import ResultArtifactV2
 from .permission_sandbox import PermissionSandbox
 from .audit_trail import RuntimeAuditTrail
+from .metrics_engine import RuntimeMetricsEngine
 from .runtime_systems import (
     RuntimeSystemEngine,
     PluginRuntimeEngine,
