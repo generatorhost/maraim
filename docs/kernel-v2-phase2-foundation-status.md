@@ -24,6 +24,7 @@ Result Artifact v2              █████████░░░░░░ 60
 Storage Engine                  █████████░░░░░░ 60%
 Diagnostics / Health            ███████░░░░░░░░ 45%
 Source Adapters                 ███████░░░░░░░░ 45%
+Foundation Guard                ███████████████ 100%
 Security / Sandbox              ██░░░░░░░░░░░░░ 10%
 Swarm Engine                    ███░░░░░░░░░░░░ 20%
 Evolution Runtime               ███░░░░░░░░░░░░ 20%
@@ -36,6 +37,8 @@ Export Evolved DNA              ░░░░░░░░░░░░░░░ 0%
 Run locally:
 
 ```bash
+python scripts/kernel_v2_preflight.py
+python scripts/kernel_v2_foundation_guard.py
 python scripts/kernel_v2_phase2_all_smoke.py
 ```
 
@@ -47,6 +50,8 @@ CI workflow:
 
 The smoke gate currently includes:
 
+- `scripts/kernel_v2_preflight.py`
+- `scripts/kernel_v2_foundation_guard.py`
 - `scripts/kernel_v2_smoke.py`
 - `scripts/kernel_v2_runtime_systems_smoke.py`
 - `scripts/kernel_v2_runtime_store_smoke.py`
@@ -73,6 +78,8 @@ The smoke gate currently includes:
 10. Execution Adapter v2 in simulated mode only.
 11. Result Artifact v2 using in-memory storage.
 12. CI smoke workflow for Phase 2.
+13. Preflight compile/import check.
+14. Foundation Guard for forbidden side effects and smoke-gate coverage.
 
 ## Not Yet Production-Complete
 
@@ -97,4 +104,6 @@ No new runtime foundation layer should be accepted unless it has:
 1. A dedicated engine/module.
 2. A dedicated smoke script.
 3. Inclusion in `scripts/kernel_v2_phase2_all_smoke.py` or the next phase gate.
-4. No database/UI/API mutation unless explicitly promoted to a later production phase.
+4. Passing `scripts/kernel_v2_preflight.py`.
+5. Passing `scripts/kernel_v2_foundation_guard.py`.
+6. No database/UI/API mutation unless explicitly promoted to a later production phase.
