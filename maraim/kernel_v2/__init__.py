@@ -17,6 +17,7 @@ from .storage_engine import RuntimeStorageEngine
 from .health_engine import RuntimeHealthEngine
 from .source_adapters import RuntimeSourceAdapter, GitSourceAdapter, ArchiveSourceAdapter, FolderSourceAdapter
 from .dependency_resolver_v2 import DependencyResolverV2
+from .task_graph_v2 import TaskGraphV2
 from .runtime_systems import (
     RuntimeSystemEngine,
     PluginRuntimeEngine,
