@@ -27,6 +27,7 @@ from .trace_engine import RuntimeTraceEngine
 from .report_builder import RuntimeReportBuilder
 from .snapshot_builder import RuntimeSnapshotBuilder
 from .real_adapters_foundation import RealAdapterFoundation
+from .sandbox_enforcement_foundation import SandboxEnforcementFoundation
 from .phase3_foundation import (
     AdapterContractRegistry,
     SandboxContractRegistry,
