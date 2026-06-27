@@ -2,17 +2,26 @@
 
 Branch: `v1.2-execution-engine`
 
-## Official Gate
+## Official CI Gate
+
+The official single command for Kernel v2 validation is:
+
+```bash
+python scripts/kernel_v2_ci_gate.py
+```
+
+This command runs:
+
+1. `scripts/kernel_v2_canonical_guard.py`
+2. `scripts/kernel_v2_all_smoke.py`
+
+## Official Smoke Gate
 
 The official smoke entrypoint is:
 
 ```bash
 python scripts/kernel_v2_all_smoke.py
 ```
-
-This is the only public smoke gate name that should be used by developers, CI, and future documentation.
-
-## Gate Policy
 
 `kernel_v2_all_smoke.py` directly lists and runs every real smoke test. Transitional `plus` gates must not be used as public entrypoints or CI entrypoints.
 
@@ -31,6 +40,7 @@ This checks that:
 - Phase4 uses public API imports.
 - Phase4 is exported from `maraim.kernel_v2`.
 - Phase4 smoke does not use deep imports.
+- Real adapters foundation is exported from `maraim.kernel_v2`.
 
 ## Official CI
 
@@ -38,4 +48,4 @@ This checks that:
 .github/workflows/kernel-v2-canonical-smoke.yml
 ```
 
-Only the canonical workflow should run on push or pull request for Kernel v2 smoke validation.
+Only the canonical workflow should run on push or pull request for Kernel v2 validation.
