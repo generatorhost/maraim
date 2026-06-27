@@ -1,9 +1,11 @@
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from maraim.dna.compiler import compile_dna
 from maraim.kernel_v2 import (
     DNAExtractorEngine,
     KernelV2,
@@ -78,6 +80,11 @@ extracted = extractor.extract_from_tree(
     },
 )
 extractor_status = extractor.status()
+with tempfile.TemporaryDirectory() as tmp:
+    legacy_root = Path(tmp)
+    (legacy_root / "agents").mkdir()
+    (legacy_root / "agents" / "legacy_agent.py").write_text("class LegacyAgent:\n    pass\ndef run():\n    return True\n", encoding="utf-8")
+    legacy_compile = compile_dna(None, str(legacy_root))
 
 print("MARAIM_KERNEL_V2_SMOKE_OK")
 print(status["state"])
@@ -119,6 +126,7 @@ print(object_delete)
 print(object_status)
 print(extracted)
 print(extractor_status)
+print(legacy_compile)
 
 assert status["state"] == "running"
 assert status["graph"]["nodes"] >= 4
@@ -190,3 +198,7 @@ assert "fastapi" in extracted["inventory"]["frameworks"]
 assert any("api_routes" in obj["capabilities"] for obj in extracted["runtime_objects"])
 assert any(edge["relation"] == "can_use_model" for edge in extracted["graph_edges"])
 assert extractor_status["extractions"] >= 1
+assert legacy_compile["ok"] is True
+assert legacy_compile["deprecated"] is True
+assert legacy_compile["adapter"] == "DNAExtractorEngine"
+assert legacy_compile["package"]["export_name"].endswith(".mdp")
