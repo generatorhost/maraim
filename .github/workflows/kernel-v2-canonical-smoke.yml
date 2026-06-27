@@ -1,0 +1,23 @@
+name: Kernel v2 Canonical Smoke
+
+on:
+  push:
+    branches:
+      - v1.2-execution-engine
+  pull_request:
+    branches:
+      - main
+      - v1.2-execution-engine
+  workflow_dispatch:
+
+jobs:
+  canonical-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python scripts/kernel_v2_canonical_guard.py
+      - run: python scripts/kernel_v2_all_smoke.py
