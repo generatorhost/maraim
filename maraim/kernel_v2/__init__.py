@@ -35,7 +35,7 @@ from .persistence_checkpoint import PersistenceCheckpoint
 from .persistence_recovery import PersistenceRecovery
 from .foundation_completion_ledger import FoundationCompletionLedger, FOUNDATION_COMPONENTS
 from .real_sources import RealSourceReadiness
-from .production_bridge import ProductionBridgeSteps
+from .production_bridge import ProductionBridgeSteps, ProductionBridgePhase2, PHASE2_STEPS
 from .phase3_foundation import (
     AdapterContractRegistry,
     SandboxContractRegistry,
