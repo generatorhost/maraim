@@ -14,6 +14,7 @@ GATES = [
     "scripts/kernel_v2_real_engines_roadmap_smoke.py",
     "scripts/kernel_v2_git_adapter_plan_smoke.py",
     "scripts/kernel_v2_archive_adapter_plan_smoke.py",
+    "scripts/kernel_v2_folder_adapter_plan_smoke.py",
 ]
 
 results = []
