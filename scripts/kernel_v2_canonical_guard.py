@@ -12,6 +12,7 @@ audit_bridge = ROOT / "maraim/kernel_v2/audit_persistence_bridge.py"
 persistence_health = ROOT / "maraim/kernel_v2/persistence_health.py"
 persistence_status = ROOT / "maraim/kernel_v2/persistence_status.py"
 persistence_checkpoint = ROOT / "maraim/kernel_v2/persistence_checkpoint.py"
+persistence_recovery = ROOT / "maraim/kernel_v2/persistence_recovery.py"
 
 required_smokes = [
     "scripts/kernel_v2_smoke.py",
@@ -37,6 +38,7 @@ required_smokes = [
     "scripts/kernel_v2_sqlite_audit_adapter_smoke.py",
     "scripts/kernel_v2_audit_persistence_bridge_smoke.py",
     "scripts/kernel_v2_persistence_status_checkpoint_smoke.py",
+    "scripts/kernel_v2_persistence_recovery_smoke.py",
 ]
 
 transition_gates = [
@@ -46,7 +48,7 @@ transition_gates = [
     "scripts/kernel_v2_phase2_plus4_smoke.py",
 ]
 
-required_files = [canonical, phase4_smoke, init_file, real_adapters, sandbox_enforcement, sqlite_audit, audit_bridge, persistence_health, persistence_checkpoint]
+required_files = [canonical, phase4_smoke, init_file, real_adapters, sandbox_enforcement, sqlite_audit, audit_bridge, persistence_health, persistence_checkpoint, persistence_recovery]
 missing = [str(path.relative_to(ROOT)) for path in required_files if not path.exists()]
 canonical_text = canonical.read_text(encoding="utf-8") if canonical.exists() else ""
 phase4_text = phase4_smoke.read_text(encoding="utf-8") if phase4_smoke.exists() else ""
@@ -81,6 +83,8 @@ if "from .persistence_health import PersistenceHealth" not in init_text:
     violations.append("persistence_health_not_exported_from_public_api")
 if "from .persistence_checkpoint import PersistenceCheckpoint" not in init_text:
     violations.append("persistence_checkpoint_not_exported_from_public_api")
+if "from .persistence_recovery import PersistenceRecovery" not in init_text:
+    violations.append("persistence_recovery_not_exported_from_public_api")
 if "maraim.kernel_v2.phase4_foundation" in phase4_text:
     violations.append("phase4_smoke_uses_deep_import")
 for label, text in [("real_adapters", real_adapters_text), ("sandbox_enforcement", sandbox_enforcement_text)]:
