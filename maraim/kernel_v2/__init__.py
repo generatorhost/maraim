@@ -37,6 +37,7 @@ from .foundation_completion_ledger import FoundationCompletionLedger, FOUNDATION
 from .real_sources import RealSourceReadiness
 from .production_bridge import ProductionBridgeSteps, ProductionBridgePhase2, ProductionBridgePhase3, PHASE2_STEPS, PHASE3_STEPS
 from .real_engines_roadmap import RealEnginesRoadmap, REAL_ENGINE_STAGES
+from .git_adapter_plan import GitAdapterImplementationPlan, GIT_ADAPTER_PLAN_STEPS
 from .phase3_foundation import (
     AdapterContractRegistry,
     SandboxContractRegistry,
