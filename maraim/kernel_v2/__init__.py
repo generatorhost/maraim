@@ -30,6 +30,8 @@ from .real_adapters_foundation import RealAdapterFoundation
 from .sandbox_enforcement_foundation import SandboxEnforcementFoundation
 from .sqlite_audit_adapter import SQLiteAuditAdapter
 from .audit_persistence_bridge import AuditPersistenceBridge
+from .persistence_status import PersistenceStatus
+from .persistence_checkpoint import PersistenceCheckpoint
 from .phase3_foundation import (
     AdapterContractRegistry,
     SandboxContractRegistry,
