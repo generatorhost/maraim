@@ -40,6 +40,7 @@ from .real_engines_roadmap import RealEnginesRoadmap, REAL_ENGINE_STAGES
 from .git_adapter_plan import GitAdapterImplementationPlan, GIT_ADAPTER_PLAN_STEPS
 from .archive_adapter_plan import ArchiveAdapterImplementationPlan, ARCHIVE_ADAPTER_PLAN_STEPS
 from .folder_adapter_plan import FolderAdapterImplementationPlan, FOLDER_ADAPTER_PLAN_STEPS
+from .runtime_workspace_manager import RuntimeWorkspaceManager
 from .phase3_foundation import (
     AdapterContractRegistry,
     SandboxContractRegistry,
