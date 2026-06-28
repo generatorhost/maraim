@@ -34,6 +34,7 @@ from .persistence_health import PersistenceHealth
 from .persistence_checkpoint import PersistenceCheckpoint
 from .persistence_recovery import PersistenceRecovery
 from .foundation_completion_ledger import FoundationCompletionLedger, FOUNDATION_COMPONENTS
+from .real_sources import RealSourceReadiness
 from .phase3_foundation import (
     AdapterContractRegistry,
     SandboxContractRegistry,
