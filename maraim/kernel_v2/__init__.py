@@ -29,6 +29,7 @@ from .snapshot_builder import RuntimeSnapshotBuilder
 from .real_adapters_foundation import RealAdapterFoundation
 from .sandbox_enforcement_foundation import SandboxEnforcementFoundation
 from .sqlite_audit_adapter import SQLiteAuditAdapter
+from .audit_persistence_bridge import AuditPersistenceBridge
 from .phase3_foundation import (
     AdapterContractRegistry,
     SandboxContractRegistry,
