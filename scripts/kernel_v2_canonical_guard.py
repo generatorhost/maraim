@@ -3,8 +3,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 canonical = ROOT / "scripts/kernel_v2_all_smoke.py"
+ci_gate = ROOT / "scripts/kernel_v2_ci_gate.py"
 phase4_smoke = ROOT / "scripts/kernel_v2_phase4_foundation_smoke.py"
 init_file = ROOT / "maraim/kernel_v2/__init__.py"
+real_sources = ROOT / "maraim/kernel_v2/real_sources/readiness.py"
 real_adapters = ROOT / "maraim/kernel_v2/real_adapters_foundation.py"
 sandbox_enforcement = ROOT / "maraim/kernel_v2/sandbox_enforcement_foundation.py"
 sqlite_audit = ROOT / "maraim/kernel_v2/sqlite_audit_adapter.py"
@@ -50,9 +52,10 @@ transition_gates = [
     "scripts/kernel_v2_phase2_plus4_smoke.py",
 ]
 
-required_files = [canonical, phase4_smoke, init_file, real_adapters, sandbox_enforcement, sqlite_audit, audit_bridge, persistence_health, persistence_checkpoint, persistence_recovery, foundation_ledger]
+required_files = [canonical, ci_gate, phase4_smoke, init_file, real_sources, real_adapters, sandbox_enforcement, sqlite_audit, audit_bridge, persistence_health, persistence_checkpoint, persistence_recovery, foundation_ledger]
 missing = [str(path.relative_to(ROOT)) for path in required_files if not path.exists()]
 canonical_text = canonical.read_text(encoding="utf-8") if canonical.exists() else ""
+ci_gate_text = ci_gate.read_text(encoding="utf-8") if ci_gate.exists() else ""
 phase4_text = phase4_smoke.read_text(encoding="utf-8") if phase4_smoke.exists() else ""
 init_text = init_file.read_text(encoding="utf-8") if init_file.exists() else ""
 real_adapters_text = real_adapters.read_text(encoding="utf-8") if real_adapters.exists() else ""
@@ -62,13 +65,17 @@ violations = []
 for smoke in required_smokes:
     if smoke not in canonical_text:
         violations.append(f"canonical_gate_missing:{smoke}")
+if "scripts/kernel_v2_real_source_readiness_smoke.py" not in ci_gate_text:
+    violations.append("ci_gate_missing_real_source_readiness_smoke")
 for gate in transition_gates:
-    if gate in canonical_text:
+    if gate in canonical_text or gate in ci_gate_text:
         violations.append(f"canonical_gate_uses_transition_gate:{gate}")
 if persistence_status.exists():
     violations.append("deprecated_persistence_status_file_exists")
 if "PersistenceStatus" in init_text:
     violations.append("deprecated_persistence_status_exported")
+if "from .real_sources import RealSourceReadiness" not in init_text:
+    violations.append("real_source_readiness_not_exported_from_public_api")
 if "from maraim.kernel_v2 import KernelV2, PHASE4_STAGES, Phase4FoundationEngine" not in phase4_text:
     violations.append("phase4_smoke_does_not_use_public_api")
 if "from .phase4_foundation import Phase4FoundationEngine, PHASE4_STAGES" not in init_text:
