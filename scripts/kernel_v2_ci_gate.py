@@ -7,6 +7,7 @@ GATES = [
     "scripts/kernel_v2_canonical_guard.py",
     "scripts/kernel_v2_all_smoke.py",
     "scripts/kernel_v2_real_source_readiness_smoke.py",
+    "scripts/kernel_v2_production_bridge_steps_smoke.py",
 ]
 
 results = []
