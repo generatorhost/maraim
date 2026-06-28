@@ -32,6 +32,7 @@ from .sqlite_audit_adapter import SQLiteAuditAdapter
 from .audit_persistence_bridge import AuditPersistenceBridge
 from .persistence_health import PersistenceHealth
 from .persistence_checkpoint import PersistenceCheckpoint
+from .persistence_recovery import PersistenceRecovery
 from .phase3_foundation import (
     AdapterContractRegistry,
     SandboxContractRegistry,
