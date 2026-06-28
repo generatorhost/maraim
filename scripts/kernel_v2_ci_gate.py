@@ -12,6 +12,7 @@ GATES = [
     "scripts/kernel_v2_production_bridge_phase2_smoke.py",
     "scripts/kernel_v2_production_bridge_phase3_smoke.py",
     "scripts/kernel_v2_real_engines_roadmap_smoke.py",
+    "scripts/kernel_v2_git_adapter_plan_smoke.py",
 ]
 
 results = []
