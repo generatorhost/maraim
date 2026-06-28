@@ -28,6 +28,7 @@ SMOKE_TESTS = [
     "scripts/kernel_v2_audit_persistence_bridge_smoke.py",
     "scripts/kernel_v2_persistence_status_checkpoint_smoke.py",
     "scripts/kernel_v2_persistence_recovery_smoke.py",
+    "scripts/kernel_v2_foundation_completion_ledger_smoke.py",
 ]
 
 results = []
