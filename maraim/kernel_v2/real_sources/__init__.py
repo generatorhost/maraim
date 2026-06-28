@@ -1,3 +1,5 @@
 """Source readiness package for Kernel v2."""
 
-__all__ = []
+from .readiness import RealSourceReadiness
+
+__all__ = ["RealSourceReadiness"]
