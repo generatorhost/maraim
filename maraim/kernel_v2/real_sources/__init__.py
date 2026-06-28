@@ -1,9 +1,3 @@
-from .contracts import RealSourceContract
-from .plans import RealSourceExecutionPlan
-from .readiness import RealSourceReadiness
+"""Source readiness package for Kernel v2."""
 
-__all__ = [
-    "RealSourceContract",
-    "RealSourceExecutionPlan",
-    "RealSourceReadiness",
-]
+__all__ = []
