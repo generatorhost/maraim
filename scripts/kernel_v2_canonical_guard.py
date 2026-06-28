@@ -9,6 +9,7 @@ real_adapters = ROOT / "maraim/kernel_v2/real_adapters_foundation.py"
 sandbox_enforcement = ROOT / "maraim/kernel_v2/sandbox_enforcement_foundation.py"
 sqlite_audit = ROOT / "maraim/kernel_v2/sqlite_audit_adapter.py"
 audit_bridge = ROOT / "maraim/kernel_v2/audit_persistence_bridge.py"
+persistence_health = ROOT / "maraim/kernel_v2/persistence_health.py"
 persistence_status = ROOT / "maraim/kernel_v2/persistence_status.py"
 persistence_checkpoint = ROOT / "maraim/kernel_v2/persistence_checkpoint.py"
 
@@ -45,7 +46,7 @@ transition_gates = [
     "scripts/kernel_v2_phase2_plus4_smoke.py",
 ]
 
-required_files = [canonical, phase4_smoke, init_file, real_adapters, sandbox_enforcement, sqlite_audit, audit_bridge, persistence_status, persistence_checkpoint]
+required_files = [canonical, phase4_smoke, init_file, real_adapters, sandbox_enforcement, sqlite_audit, audit_bridge, persistence_health, persistence_checkpoint]
 missing = [str(path.relative_to(ROOT)) for path in required_files if not path.exists()]
 canonical_text = canonical.read_text(encoding="utf-8") if canonical.exists() else ""
 phase4_text = phase4_smoke.read_text(encoding="utf-8") if phase4_smoke.exists() else ""
@@ -60,6 +61,10 @@ for smoke in required_smokes:
 for gate in transition_gates:
     if gate in canonical_text:
         violations.append(f"canonical_gate_uses_transition_gate:{gate}")
+if persistence_status.exists():
+    violations.append("deprecated_persistence_status_file_exists")
+if "PersistenceStatus" in init_text:
+    violations.append("deprecated_persistence_status_exported")
 if "from maraim.kernel_v2 import KernelV2, PHASE4_STAGES, Phase4FoundationEngine" not in phase4_text:
     violations.append("phase4_smoke_does_not_use_public_api")
 if "from .phase4_foundation import Phase4FoundationEngine, PHASE4_STAGES" not in init_text:
@@ -72,8 +77,8 @@ if "from .sqlite_audit_adapter import SQLiteAuditAdapter" not in init_text:
     violations.append("sqlite_audit_not_exported_from_public_api")
 if "from .audit_persistence_bridge import AuditPersistenceBridge" not in init_text:
     violations.append("audit_persistence_bridge_not_exported_from_public_api")
-if "from .persistence_status import PersistenceStatus" not in init_text:
-    violations.append("persistence_status_not_exported_from_public_api")
+if "from .persistence_health import PersistenceHealth" not in init_text:
+    violations.append("persistence_health_not_exported_from_public_api")
 if "from .persistence_checkpoint import PersistenceCheckpoint" not in init_text:
     violations.append("persistence_checkpoint_not_exported_from_public_api")
 if "maraim.kernel_v2.phase4_foundation" in phase4_text:
