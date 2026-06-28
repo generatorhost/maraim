@@ -25,6 +25,7 @@ SMOKE_TESTS = [
     "scripts/kernel_v2_real_adapters_foundation_smoke.py",
     "scripts/kernel_v2_sandbox_enforcement_foundation_smoke.py",
     "scripts/kernel_v2_sqlite_audit_adapter_smoke.py",
+    "scripts/kernel_v2_audit_persistence_bridge_smoke.py",
 ]
 
 results = []
